@@ -203,7 +203,12 @@ export default function NotesPage() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button size="sm" className="flex-1" disabled={!note.fileUrl}>
+                <Button 
+                  size="sm" 
+                  className="flex-1" 
+                  onClick={() => note.fileUrl && window.open(note.fileUrl, '_blank')}
+                  disabled={!note.fileUrl}
+                >
                   <Eye className="h-4 w-4 mr-2" />
                   Preview
                 </Button>
@@ -211,7 +216,16 @@ export default function NotesPage() {
                   size="sm" 
                   variant="outline" 
                   className="flex-1 bg-transparent"
-                  onClick={() => note.fileUrl && window.open(note.fileUrl, '_blank')}
+                  onClick={() => {
+                    if (note.fileUrl) {
+                      const link = document.createElement('a')
+                      link.href = note.fileUrl + '?fl_attachment=true'
+                      link.download = note.fileName || 'document.pdf'
+                      document.body.appendChild(link)
+                      link.click()
+                      document.body.removeChild(link)
+                    }
+                  }}
                   disabled={!note.fileUrl}
                 >
                   <Download className="h-4 w-4 mr-2" />

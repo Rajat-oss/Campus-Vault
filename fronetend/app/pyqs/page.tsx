@@ -48,10 +48,10 @@ export default function PYQsPage() {
 
   let filteredPYQs = pyqs.filter((pyq: any) => {
     const matchesSearch =
-      pyq.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      pyq.subject.toLowerCase().includes(searchTerm.toLowerCase())
+      (pyq.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (pyq.subject || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesBranch = selectedBranch === "All" || pyq.branch === selectedBranch
-    const matchesYear = selectedYear === "All" || pyq.year.toString() === selectedYear
+    const matchesYear = selectedYear === "All" || (pyq.year || '').toString() === selectedYear
     const matchesSubject = selectedSubject === "All" || pyq.subject === selectedSubject
     const matchesExamType = selectedExamType === "All" || pyq.examType === selectedExamType
 
@@ -244,7 +244,7 @@ export default function PYQsPage() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Date:</span>
-                    <span className="font-medium">{new Date(pyq.uploadedAt?.toDate()).toLocaleDateString()}</span>
+                    <span className="font-medium">{pyq.uploadedAt ? new Date(pyq.uploadedAt).toLocaleDateString() : 'Recently'}</span>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -256,7 +256,11 @@ export default function PYQsPage() {
                     size="sm" 
                     variant="outline" 
                     className="flex-1 bg-transparent"
-                    onClick={() => pyq.fileUrl && window.open(pyq.fileUrl, '_blank')}
+                    onClick={() => {
+                      if (pyq.fileUrl) {
+                        window.open(pyq.fileUrl, '_blank')
+                      }
+                    }}
                     disabled={!pyq.fileUrl}
                   >
                     <Download className="h-4 w-4 mr-2" />
