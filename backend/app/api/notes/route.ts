@@ -54,7 +54,8 @@ export async function POST(request: NextRequest) {
         cloudinary.uploader.upload_stream(
           { 
             resource_type: 'raw',
-            folder: `campus-vault/notes/${branch}/sem${semester}/${subject}`
+            folder: `campus-vault/notes/${branch}/sem${semester}/${subject}`,
+            public_id: `${Date.now()}_${file.name}`
           },
           (error, result) => {
             if (error) reject(error)

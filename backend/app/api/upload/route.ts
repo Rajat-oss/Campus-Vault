@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
         { 
           resource_type: 'raw',
           folder: `campus-vault/${type}`,
-          public_id: `${Date.now()}_${file.name.split('.')[0]}`
+          public_id: `${Date.now()}_${file.name}`
         },
         (error, result) => {
           if (error) {
@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'File uploaded successfully',
       url: result.secure_url,
+      downloadUrl: result.secure_url + '?fl_attachment=true',
       public_id: result.public_id,
       fileName: file.name,
       fileSize: result.bytes
