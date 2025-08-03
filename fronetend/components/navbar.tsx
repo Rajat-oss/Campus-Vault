@@ -85,6 +85,11 @@ export function Navbar() {
 
           <div className="flex items-center space-x-4">
             <div className="hidden md:flex items-center gap-2">
+              {profile?.name && (
+                <span className="text-sm text-muted-foreground">
+                  Welcome, {profile.name}
+                </span>
+              )}
               <Button asChild variant="outline" size="sm">
                 <Link href="/profile">Profile</Link>
               </Button>
@@ -123,6 +128,11 @@ export function Navbar() {
                 </Link>
               ))}
               <div className="space-y-1 pt-2 border-t">
+                {profile?.name && (
+                  <div className="px-3 py-2 text-sm text-muted-foreground">
+                    Welcome, {profile.name}
+                  </div>
+                )}
                 <Link href="/profile" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-accent" onClick={() => setIsOpen(false)}>Profile</Link>
                 <button onClick={() => { handleLogout(); setIsOpen(false) }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-accent">Logout</button>
               </div>
