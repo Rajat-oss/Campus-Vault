@@ -6,120 +6,38 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookOpen, Download, Eye, Search, Star } from "lucide-react"
-
-const notes = [
-  {
-    id: 1,
-    title: "Data Structures and Algorithms - Complete Notes",
-    subject: "Data Structures",
-    semester: "3rd Semester",
-    branch: "CSE",
-    type: "Handwritten",
-    author: "Priya Sharma",
-    uploadDate: "2024-01-15",
-    views: 1250,
-    rating: 4.8,
-    thumbnail: "/placeholder.svg?height=200&width=300&text=DSA+Notes",
-    format: "PDF",
-    size: "15.2 MB",
-  },
-  {
-    id: 2,
-    title: "Operating Systems Concepts",
-    subject: "Operating Systems",
-    semester: "4th Semester",
-    branch: "CSE",
-    type: "Typed",
-    author: "Rahul Kumar",
-    uploadDate: "2024-01-12",
-    views: 890,
-    rating: 4.6,
-    thumbnail: "/placeholder.svg?height=200&width=300&text=OS+Notes",
-    format: "PDF",
-    size: "8.7 MB",
-  },
-  {
-    id: 3,
-    title: "Digital Electronics - Gate Preparation",
-    subject: "Digital Electronics",
-    semester: "3rd Semester",
-    branch: "ECE",
-    type: "Handwritten",
-    author: "Ananya Patel",
-    uploadDate: "2024-01-10",
-    views: 675,
-    rating: 4.9,
-    thumbnail: "/placeholder.svg?height=200&width=300&text=Digital+Electronics",
-    format: "PDF",
-    size: "12.1 MB",
-  },
-  {
-    id: 4,
-    title: "Database Management Systems",
-    subject: "DBMS",
-    semester: "4th Semester",
-    branch: "CSE",
-    type: "Handwritten",
-    author: "Arjun Singh",
-    uploadDate: "2024-01-08",
-    views: 1100,
-    rating: 4.7,
-    thumbnail: "/placeholder.svg?height=200&width=300&text=DBMS+Notes",
-    format: "PDF",
-    size: "18.5 MB",
-  },
-  {
-    id: 5,
-    title: "Microprocessors and Microcontrollers",
-    subject: "Microprocessors",
-    semester: "5th Semester",
-    branch: "ECE",
-    type: "Typed",
-    author: "Sneha Reddy",
-    uploadDate: "2024-01-05",
-    views: 520,
-    rating: 4.5,
-    thumbnail: "/placeholder.svg?height=200&width=300&text=Microprocessors",
-    format: "PDF",
-    size: "9.8 MB",
-  },
-  {
-    id: 6,
-    title: "Computer Networks - Complete Guide",
-    subject: "Computer Networks",
-    semester: "5th Semester",
-    branch: "CSE",
-    type: "Handwritten",
-    author: "Vikash Gupta",
-    uploadDate: "2024-01-03",
-    views: 980,
-    rating: 4.8,
-    thumbnail: "/placeholder.svg?height=200&width=300&text=Computer+Networks",
-    format: "PDF",
-    size: "14.3 MB",
-  },
-]
+import { BookOpen, Download, Eye, Search, Star, Loader2 } from "lucide-react"
+import { useNotes } from "@/hooks/use-realtime-data"
 
 const branches = ["All", "CSE", "ECE", "Mechanical", "Civil", "IT", "Electrical"]
-const semesters = [
-  "All",
-  "1st Semester",
-  "2nd Semester",
-  "3rd Semester",
-  "4th Semester",
-  "5th Semester",
-  "6th Semester",
-  "7th Semester",
-  "8th Semester",
-]
-const subjects = ["All", ...Array.from(new Set(notes.map((note) => note.subject)))]
+const semesters = ["All", 1, 2, 3, 4, 5, 6, 7, 8]
 
 export default function NotesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedBranch, setSelectedBranch] = useState("All")
   const [selectedSemester, setSelectedSemester] = useState("All")
   const [selectedSubject, setSelectedSubject] = useState("All")
+  
+  const { data: notes, loading, error } = useNotes()
+  
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading notes...</span>
+      </div>
+    )
+  }
+  
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <p className="text-red-500">Failed to load notes</p>
+      </div>
+    )
+  }
+  
+  const subjects = ["All", ...Array.from(new Set(notes.map((note) => note.subject)))]
 
   const filteredNotes = notes.filter((note) => {
     const matchesSearch =
@@ -132,41 +50,39 @@ export default function NotesPage() {
     return matchesSearch && matchesBranch && matchesSemester && matchesSubject
   })
 
-  const popularNotes = notes.sort((a, b) => b.views - a.views).slice(0, 3)
+  const popularNotes = notes.slice(0, 3)
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-4">Study Notes</h1>
-        <p className="text-muted-foreground text-lg">Access handwritten notes and study materials from seniors</p>
+        <p className="text-muted-foreground text-lg">Access notes and study materials from students</p>
       </div>
 
       {/* Popular Notes Section */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4 flex items-center">
-          <Star className="h-6 w-6 text-yellow-500 mr-2" />
-          Most Viewed Notes
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {popularNotes.map((note) => (
-            <Card key={note.id} className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <Badge variant={note.type === "Handwritten" ? "default" : "secondary"}>{note.type}</Badge>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Eye className="h-4 w-4 mr-1" />
-                    {note.views}
+      {popularNotes.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4 flex items-center">
+            <Star className="h-6 w-6 text-yellow-500 mr-2" />
+            Recent Notes
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {popularNotes.map((note) => (
+              <Card key={note.id} className="hover:shadow-lg transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="default">{note.noteType || 'uploaded'}</Badge>
                   </div>
-                </div>
-                <h3 className="font-semibold text-sm mb-1 line-clamp-2">{note.title}</h3>
-                <p className="text-xs text-muted-foreground">
-                  {note.subject} • {note.semester}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+                  <h3 className="font-semibold text-sm mb-1 line-clamp-2">{note.title}</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {note.subject} • {note.semester}th Semester
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Search and Filters */}
       <div className="space-y-4 mb-8">
@@ -206,7 +122,7 @@ export default function NotesPage() {
               <SelectContent>
                 {semesters.map((semester) => (
                   <SelectItem key={semester} value={semester}>
-                    {semester}
+                    {semester === "All" ? "All" : `${semester}th Semester`}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -236,17 +152,13 @@ export default function NotesPage() {
         {filteredNotes.map((note) => (
           <Card key={note.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="p-0">
-              <div className="relative">
-                <img
-                  src={note.thumbnail || "/placeholder.svg"}
-                  alt={note.title}
-                  className="w-full h-48 object-cover rounded-t-lg"
-                />
+              <div className="relative bg-gradient-to-br from-blue-50 to-indigo-100 h-48 flex items-center justify-center">
+                <BookOpen className="h-16 w-16 text-blue-500" />
                 <div className="absolute top-2 left-2">
-                  <Badge variant={note.type === "Handwritten" ? "default" : "secondary"}>{note.type}</Badge>
+                  <Badge variant="default">{note.noteType || 'uploaded'}</Badge>
                 </div>
                 <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
-                  {note.format} • {note.size}
+                  {note.fileName || 'PDF'}
                 </div>
               </div>
             </CardHeader>
@@ -259,29 +171,30 @@ export default function NotesPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Semester:</span>
-                  <span className="font-medium">{note.semester}</span>
+                  <span className="font-medium">{note.semester}th</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Author:</span>
-                  <span className="font-medium">{note.author}</span>
+                  <span className="text-muted-foreground">Uploaded by:</span>
+                  <span className="font-medium">{note.uploadedBy}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <div className="flex items-center">
-                    <Eye className="h-4 w-4 mr-1 text-muted-foreground" />
-                    <span>{note.views} views</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Star className="h-4 w-4 mr-1 text-yellow-500" />
-                    <span>{note.rating}</span>
+                    <span className="text-muted-foreground">{new Date(note.uploadedAt?.toDate()).toLocaleDateString()}</span>
                   </div>
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button size="sm" className="flex-1">
+                <Button size="sm" className="flex-1" disabled={!note.fileUrl}>
                   <Eye className="h-4 w-4 mr-2" />
                   Preview
                 </Button>
-                <Button size="sm" variant="outline" className="flex-1 bg-transparent">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="flex-1 bg-transparent"
+                  onClick={() => note.fileUrl && window.open(note.fileUrl, '_blank')}
+                  disabled={!note.fileUrl}
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Download
                 </Button>
@@ -296,7 +209,7 @@ export default function NotesPage() {
           <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">No Notes Found</h3>
           <p className="text-muted-foreground">
-            No notes match your current filters. Try adjusting your search criteria.
+            No notes uploaded yet. Be the first to share your notes!
           </p>
         </div>
       )}

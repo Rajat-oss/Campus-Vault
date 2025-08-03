@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Menu, X, BookOpen, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/use-auth"
+import { useUserProfile } from "@/hooks/use-user-profile"
 import { logout } from "@/lib/auth"
 import { useToast } from "@/hooks/use-toast"
 
@@ -17,6 +18,7 @@ const navigation = [
   { name: "Timetable", href: "/timetable" },
   { name: "Notes", href: "/notes" },
   { name: "PYQs", href: "/pyqs" },
+  { name: "Upload", href: "/upload" },
   { name: "Request", href: "/request" },
 ]
 
@@ -24,7 +26,14 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
   const { user, loading } = useAuth()
+  const { profile } = useUserProfile()
   const { toast } = useToast()
+
+  const isAuthPage = pathname === '/login' || pathname === '/signup'
+  
+  if (isAuthPage) {
+    return null
+  }
 
   const handleLogout = async () => {
     try {
@@ -67,28 +76,20 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center space-x-4">
-            {!loading && (
-              user ? (
-                <div className="hidden md:flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">{user.email}</span>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href="/admin">Admin</Link>
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleLogout}>
-                    <LogOut className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="hidden md:flex gap-2">
-                  <Button asChild variant="outline" size="sm">
-                    <Link href="/login">Login</Link>
-                  </Button>
-                  <Button asChild size="sm">
-                    <Link href="/signup">Sign Up</Link>
-                  </Button>
-                </div>
-              )
-            )}
+            <div className="hidden md:flex items-center gap-2">
+              <div className="text-sm text-muted-foreground">
+                <div>{profile?.name || user?.email}</div>
+                <div className="text-xs">{profile?.profession} {profile?.department && `• ${profile.department}`}</div>
+              </div>
+              {profile?.profession === 'faculty' && (
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/admin">Faculty Panel</Link>
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
             <ThemeToggle />
 
             {/* Mobile menu button */}
@@ -119,20 +120,16 @@ export function Navbar() {
                   {item.name}
                 </Link>
               ))}
-              {!loading && (
-                user ? (
-                  <div className="space-y-1 pt-2 border-t">
-                    <div className="px-3 py-2 text-sm text-muted-foreground">{user.email}</div>
-                    <Link href="/admin" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-accent" onClick={() => setIsOpen(false)}>Admin</Link>
-                    <button onClick={() => { handleLogout(); setIsOpen(false) }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-accent">Logout</button>
-                  </div>
-                ) : (
-                  <div className="space-y-1 pt-2 border-t">
-                    <Link href="/login" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-accent" onClick={() => setIsOpen(false)}>Login</Link>
-                    <Link href="/signup" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-accent" onClick={() => setIsOpen(false)}>Sign Up</Link>
-                  </div>
-                )
-              )}
+              <div className="space-y-1 pt-2 border-t">
+                <div className="px-3 py-2 text-sm text-muted-foreground">
+                  <div>{profile?.name || user?.email}</div>
+                  <div className="text-xs">{profile?.profession} {profile?.department && `• ${profile.department}`}</div>
+                </div>
+                {profile?.profession === 'faculty' && (
+                  <Link href="/admin" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-accent" onClick={() => setIsOpen(false)}>Faculty Panel</Link>
+                )}
+                <button onClick={() => { handleLogout(); setIsOpen(false) }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-accent">Logout</button>
+              </div>
             </div>
           </div>
         )}

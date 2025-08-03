@@ -2,8 +2,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Calendar, Loader2, Trash2 } from "lucide-react"
 import { useAnnouncements } from "@/hooks/use-realtime-data"
+import { deleteAnnouncement } from "@/lib/firebase-operations"
+import { useToast } from "@/hooks/use-toast"
+import { useUserProfile } from "@/hooks/use-user-profile"
 
 const getTagColor = (tag: string) => {
   const colors: Record<string, string> = {
@@ -18,6 +22,22 @@ const getTagColor = (tag: string) => {
 
 export function RealtimeAnnouncements() {
   const { data: announcements, loading, error } = useAnnouncements({ isActive: true })
+  const { profile } = useUserProfile()
+  const { toast } = useToast()
+
+  const handleDelete = async (id: string, createdBy: string) => {
+    if (profile?.name !== createdBy && profile?.profession !== 'faculty') {
+      toast({ title: "Error", description: "You can only delete your own announcements", variant: "destructive" })
+      return
+    }
+    
+    try {
+      await deleteAnnouncement(id)
+      toast({ title: "Success", description: "Announcement deleted successfully" })
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete announcement", variant: "destructive" })
+    }
+  }
 
   if (loading) {
     return (
@@ -45,15 +65,28 @@ export function RealtimeAnnouncements() {
           <CardHeader className="pb-3">
             <div className="flex justify-between items-start mb-2">
               <Badge className={getTagColor(announcement.type)}>{announcement.type}</Badge>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Calendar className="h-4 w-4 mr-1" />
-                {new Date(announcement.timestamp).toLocaleDateString()}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4 mr-1" />
+                  {new Date(announcement.timestamp?.toDate()).toLocaleDateString()}
+                </div>
+                {(profile?.name === announcement.createdBy || profile?.profession === 'faculty') && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(announcement.id, announcement.createdBy)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
             <CardTitle className="text-lg leading-tight">{announcement.title}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground line-clamp-3">{announcement.content}</p>
+            <p className="text-xs text-muted-foreground mt-2">By: {announcement.createdBy}</p>
           </CardContent>
         </Card>
       ))}

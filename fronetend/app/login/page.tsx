@@ -24,7 +24,10 @@ export default function LoginPage() {
     try {
       await signIn(email, password)
       toast({ title: "Success", description: "Logged in successfully" })
-      router.push("/")
+      // Small delay to ensure auth state updates
+      setTimeout(() => {
+        router.push("/")
+      }, 100)
     } catch (error: any) {
       toast({ 
         title: "Login failed", 

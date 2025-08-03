@@ -1,8 +1,10 @@
 "use client"
 
 import { useState } from "react"
-
 import { useToast } from "@/hooks/use-toast"
+import { useUserProfile } from "@/hooks/use-user-profile"
+import { collection, addDoc, Timestamp } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,9 +37,8 @@ const existingContent = {
 }
 
 export default function AdminPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [password, setPassword] = useState("")
   const [activeTab, setActiveTab] = useState("announcements")
+  const { profile, loading } = useUserProfile()
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
 
@@ -75,19 +76,23 @@ export default function AdminPage() {
 
   const { toast } = useToast()
 
-  const handleLogin = async () => {
-    try {
-      // For demo purposes, using simple password check
-      // In production, this would use Firebase Auth
-      if (password === "admin123") {
-        setIsAuthenticated(true)
-        toast({ title: "Login successful", description: "Welcome to admin panel" })
-      } else {
-        toast({ title: "Login failed", description: "Invalid password", variant: "destructive" })
-      }
-    } catch (error) {
-      toast({ title: "Login error", description: "Something went wrong", variant: "destructive" })
-    }
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-screen">
+        <div>Loading...</div>
+      </div>
+    )
+  }
+
+  if (profile?.profession !== 'faculty') {
+    return (
+      <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <p className="text-muted-foreground">Only faculty members can access this panel.</p>
+        </div>
+      </div>
+    )
   }
 
   const handleFileUpload = async (file: File, type: string) => {
@@ -107,47 +112,13 @@ export default function AdminPage() {
     }, 200)
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-md mx-auto">
-          <Card>
-            <CardHeader className="text-center">
-              <Shield className="h-12 w-12 text-primary mx-auto mb-4" />
-              <CardTitle>Admin Access Required</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="password">Admin Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter admin password"
-                    onKeyPress={(e) => e.key === "Enter" && handleLogin()}
-                  />
-                </div>
-                <Button onClick={handleLogin} className="w-full">
-                  Login to Admin Panel
-                </Button>
-                <Alert>
-                  <AlertDescription>Demo password: admin123</AlertDescription>
-                </Alert>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
-  }
+
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-4">Admin Panel</h1>
-        <p className="text-muted-foreground text-lg">Manage content and upload new resources</p>
+        <h1 className="text-4xl font-bold mb-4">Faculty Panel</h1>
+        <p className="text-muted-foreground text-lg">Welcome {profile?.name} - Manage content for {profile?.department} department</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -225,24 +196,19 @@ export default function AdminPage() {
                   className="w-full" 
                   onClick={async () => {
                     try {
-                      const response = await fetch('http://localhost:3001/api/announcements', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          title: announcementForm.title,
-                          content: announcementForm.content,
-                          type: announcementForm.type,
-                          visibility: announcementForm.visibility,
-                          adminToken: 'admin123'
-                        })
+                      await addDoc(collection(db, 'announcements'), {
+                        title: announcementForm.title,
+                        content: announcementForm.content,
+                        type: announcementForm.type,
+                        isActive: announcementForm.visibility === 'public',
+                        timestamp: Timestamp.now(),
+                        createdBy: profile?.name || 'Faculty',
+                        department: profile?.department,
+                        college: profile?.college
                       })
                       
-                      if (response.ok) {
-                        toast({ title: "Success", description: "Announcement published successfully" })
-                        setAnnouncementForm({ title: "", content: "", type: "", visibility: "public" })
-                      } else {
-                        throw new Error('Failed to publish')
-                      }
+                      toast({ title: "Success", description: "Announcement published successfully" })
+                      setAnnouncementForm({ title: "", content: "", type: "", visibility: "public" })
                     } catch (error) {
                       toast({ title: "Error", description: "Failed to publish announcement", variant: "destructive" })
                     }
