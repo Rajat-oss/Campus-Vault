@@ -50,7 +50,6 @@ export default function SignupPage() {
         name,
         profession: profession as 'student' | 'faculty',
         college,
-        department,
         employeeId: profession === 'faculty' ? employeeId : undefined
       })
       
@@ -161,22 +160,7 @@ export default function SignupPage() {
               </Select>
             </div>
             
-            <div>
-              <Label htmlFor="department">Department</Label>
-              <Select value={department} onValueChange={setDepartment}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select department" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CSE">Computer Science</SelectItem>
-                  <SelectItem value="ECE">Electronics & Communication</SelectItem>
-                  <SelectItem value="Mechanical">Mechanical</SelectItem>
-                  <SelectItem value="Civil">Civil</SelectItem>
-                  <SelectItem value="IT">Information Technology</SelectItem>
-                  <SelectItem value="Electrical">Electrical</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+
             
 
             

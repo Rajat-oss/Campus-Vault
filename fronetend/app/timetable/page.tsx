@@ -5,7 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Download, Calendar, Clock, Loader2 } from "lucide-react"
+import { Download, Calendar, Clock, Loader2, Trash2 } from "lucide-react"
+import { useTimetables } from "@/hooks/use-realtime-data"
+import { useUserProfile } from "@/hooks/use-user-profile"
+import { useToast } from "@/hooks/use-toast"
+import { deleteTimetable } from "@/lib/firebase-operations"
 
 const branches = [
   "Computer Science Engineering",
@@ -58,9 +62,25 @@ const timetableData = {
 export default function TimetablePage() {
   const [selectedBranch, setSelectedBranch] = useState("")
   const [selectedSemester, setSelectedSemester] = useState("")
-  const [loading, setLoading] = useState(false)
+  const { data: timetables, loading: dataLoading } = useTimetables(selectedBranch, parseInt(selectedSemester) || undefined)
+  const { profile } = useUserProfile()
+  const { toast } = useToast()
+  
+  const currentTimetable = timetables.length > 0 ? timetables[0] : null
 
-  const currentTimetable = selectedBranch && selectedSemester ? timetableData[selectedBranch]?.[selectedSemester] : null
+  const handleDelete = async (id: string, uploadedBy: string) => {
+    if (profile?.name !== uploadedBy && profile?.profession !== 'faculty') {
+      toast({ title: "Error", description: "You can only delete your own uploads", variant: "destructive" })
+      return
+    }
+    
+    try {
+      await deleteTimetable(id)
+      toast({ title: "Success", description: "Timetable deleted successfully" })
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete timetable", variant: "destructive" })
+    }
+  }
 
   const handleDownload = () => {
     setLoading(true)
@@ -104,9 +124,9 @@ export default function TimetablePage() {
               <SelectValue placeholder="Choose your semester" />
             </SelectTrigger>
             <SelectContent>
-              {semesters.map((semester) => (
-                <SelectItem key={semester} value={semester}>
-                  {semester}
+              {[1,2,3,4,5,6,7,8].map((sem) => (
+                <SelectItem key={sem} value={sem.toString()}>
+                  {sem}th Semester
                 </SelectItem>
               ))}
             </SelectContent>
@@ -125,25 +145,41 @@ export default function TimetablePage() {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      Uploaded: {new Date(currentTimetable.uploadDate).toLocaleDateString()}
+                      Uploaded: {new Date(currentTimetable.uploadedAt?.toDate()).toLocaleDateString()}
                     </div>
-                    <Badge variant="secondary">{currentTimetable.format}</Badge>
-                    <span>{currentTimetable.size}</span>
+                    <Badge variant="secondary">{currentTimetable.fileName || 'PDF'}</Badge>
+                    <span>By: {currentTimetable.uploadedBy}</span>
                   </div>
                 </div>
-                <Button onClick={handleDownload} disabled={loading}>
-                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                  Download
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={handleDownload} disabled={loading}>
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                    Download
+                  </Button>
+                  {(profile?.name === currentTimetable.uploadedBy || profile?.profession === 'faculty') && (
+                    <Button
+                      variant="destructive"
+                      onClick={() => handleDelete(currentTimetable.id, currentTimetable.uploadedBy)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="border rounded-lg overflow-hidden">
-                <img
-                  src={currentTimetable.url || "/placeholder.svg"}
-                  alt={currentTimetable.title}
-                  className="w-full h-auto"
-                />
+              <div className="border rounded-lg overflow-hidden p-4 text-center">
+                <Calendar className="h-16 w-16 text-blue-500 mx-auto mb-4" />
+                <p className="text-muted-foreground">Timetable file available for download</p>
+                {currentTimetable.fileUrl && (
+                  <Button 
+                    onClick={() => window.open(currentTimetable.fileUrl, '_blank')}
+                    className="mt-4"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    View File
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

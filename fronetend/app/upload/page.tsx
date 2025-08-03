@@ -76,7 +76,7 @@ export default function UploadPage() {
         type: announcementForm.type,
         isActive: true,
         timestamp: Timestamp.now(),
-        createdBy: profile?.name || 'User',
+        createdBy: profile?.name || user?.email || 'Unknown',
         department: profile?.department || '',
         profession: profile?.profession || 'student',
         college: profile?.college || ''
@@ -119,7 +119,7 @@ export default function UploadPage() {
         fileName: noteForm.file?.name || "",
         fileUrl: fileUrl,
         uploadedAt: Timestamp.now(),
-        uploadedBy: profile?.name || 'User',
+        uploadedBy: profile?.name || user?.email || 'Unknown',
         uploaderProfession: profile?.profession || 'student',
         college: profile?.college || ''
       })
@@ -151,7 +151,7 @@ export default function UploadPage() {
         fileName: pyqForm.file?.name || "",
         fileUrl: fileUrl,
         uploadedAt: Timestamp.now(),
-        uploadedBy: profile?.name || 'User',
+        uploadedBy: profile?.name || user?.email || 'Unknown',
         uploaderProfession: profile?.profession || 'student',
         college: profile?.college || ''
       })
@@ -179,7 +179,7 @@ export default function UploadPage() {
         fileName: timetableForm.file?.name || "",
         fileUrl: fileUrl,
         uploadedAt: Timestamp.now(),
-        uploadedBy: profile?.name || 'User',
+        uploadedBy: profile?.name || user?.email || 'Unknown',
         uploaderProfession: profile?.profession || 'student',
         college: profile?.college || ''
       })

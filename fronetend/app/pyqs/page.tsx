@@ -8,7 +8,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FileText, Download, Eye, Search, TrendingUp } from "lucide-react"
+import { FileText, Download, Eye, Search, TrendingUp, Trash2 } from "lucide-react"
+import { useUserProfile } from "@/hooks/use-user-profile"
+import { useToast } from "@/hooks/use-toast"
+import { deletePYQ } from "@/lib/firebase-operations"
 
 const pyqs: any[] = []
 
@@ -26,6 +29,22 @@ export default function PYQsPage() {
   const [sortBy, setSortBy] = useState("newest")
 
   const { data: pyqs, loading, error } = usePYQs()
+  const { profile } = useUserProfile()
+  const { toast } = useToast()
+
+  const handleDelete = async (id: string, uploadedBy: string) => {
+    if (profile?.name !== uploadedBy && profile?.profession !== 'faculty') {
+      toast({ title: "Error", description: "You can only delete your own uploads", variant: "destructive" })
+      return
+    }
+    
+    try {
+      await deletePYQ(id)
+      toast({ title: "Success", description: "PYQ deleted successfully" })
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete PYQ", variant: "destructive" })
+    }
+  }
 
   let filteredPYQs = pyqs.filter((pyq: any) => {
     const matchesSearch =
@@ -243,6 +262,15 @@ export default function PYQsPage() {
                     <Download className="h-4 w-4 mr-2" />
                     Download
                   </Button>
+                  {(profile?.name === pyq.uploadedBy || profile?.profession === 'faculty') && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDelete(pyq.id, pyq.uploadedBy)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

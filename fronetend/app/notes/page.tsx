@@ -6,8 +6,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookOpen, Download, Eye, Search, Star, Loader2 } from "lucide-react"
+import { BookOpen, Download, Eye, Search, Star, Loader2, Trash2 } from "lucide-react"
 import { useNotes } from "@/hooks/use-realtime-data"
+import { useUserProfile } from "@/hooks/use-user-profile"
+import { useToast } from "@/hooks/use-toast"
+import { deleteNote } from "@/lib/firebase-operations"
 
 const branches = ["All", "CSE", "ECE", "Mechanical", "Civil", "IT", "Electrical"]
 const semesters = ["All", 1, 2, 3, 4, 5, 6, 7, 8]
@@ -19,6 +22,22 @@ export default function NotesPage() {
   const [selectedSubject, setSelectedSubject] = useState("All")
   
   const { data: notes, loading, error } = useNotes()
+  const { profile } = useUserProfile()
+  const { toast } = useToast()
+
+  const handleDelete = async (id: string, uploadedBy: string) => {
+    if (profile?.name !== uploadedBy && profile?.profession !== 'faculty') {
+      toast({ title: "Error", description: "You can only delete your own uploads", variant: "destructive" })
+      return
+    }
+    
+    try {
+      await deleteNote(id)
+      toast({ title: "Success", description: "Note deleted successfully" })
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete note", variant: "destructive" })
+    }
+  }
   
   if (loading) {
     return (
@@ -198,6 +217,15 @@ export default function NotesPage() {
                   <Download className="h-4 w-4 mr-2" />
                   Download
                 </Button>
+                {(profile?.name === note.uploadedBy || profile?.profession === 'faculty') && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleDelete(note.id, note.uploadedBy)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
