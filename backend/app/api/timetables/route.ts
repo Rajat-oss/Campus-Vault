@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { CloudinaryService } from '@/lib/cloudinary/upload-service'
 
 // In-memory storage for timetables
 const timetables: any[] = []
@@ -21,5 +22,63 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching timetables:', error)
     return NextResponse.json({ error: 'Failed to fetch timetables' }, { status: 500 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData()
+    const file = formData.get('file') as File
+    const title = formData.get('title') as string
+    const branch = formData.get('branch') as string
+    const semester = formData.get('semester') as string
+    const academicYear = formData.get('academicYear') as string
+    const adminToken = formData.get('adminToken') as string
+    
+    if (adminToken !== 'admin123') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+    
+    if (!file) {
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+    }
+    
+    const fileBuffer = Buffer.from(await file.arrayBuffer())
+    const folderPath = CloudinaryService.generateFolderPath('timetables', {
+      branch,
+      semester: parseInt(semester)
+    })
+    
+    const uploadResult = await CloudinaryService.uploadPDF(
+      fileBuffer,
+      file.name,
+      folderPath,
+      'timetables'
+    )
+    
+    const timetableData = {
+      id: Date.now().toString(),
+      title,
+      branch,
+      semester: parseInt(semester),
+      academicYear: academicYear || new Date().getFullYear().toString(),
+      fileName: file.name,
+      fileSize: uploadResult.bytes,
+      fileUrl: uploadResult.secure_url,
+      cloudinaryPublicId: uploadResult.public_id,
+      uploadedAt: new Date().toISOString(),
+      uploadedBy: 'admin'
+    }
+    
+    timetables.push(timetableData)
+    
+    return NextResponse.json({
+      message: 'Timetable uploaded successfully',
+      timetableId: timetableData.id,
+      fileUrl: uploadResult.secure_url
+    })
+  } catch (error) {
+    console.error('Error uploading timetable:', error)
+    return NextResponse.json({ error: 'Failed to upload timetable' }, { status: 500 })
   }
 }

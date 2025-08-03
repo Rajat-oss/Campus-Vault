@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { DatabaseService } from '@/lib/firebase/database-service'
 import { verifyAdminToken } from '@/lib/firebase/auth-utils'
+import { v2 as cloudinary } from 'cloudinary'
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,28 +27,62 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, subject, semester, branch, noteType, description, fileName, adminToken } = await request.json()
+    const formData = await request.formData()
+    const file = formData.get('file') as File
+    const title = formData.get('title') as string
+    const subject = formData.get('subject') as string
+    const semester = formData.get('semester') as string
+    const branch = formData.get('branch') as string
+    const noteType = formData.get('noteType') as string
+    const description = formData.get('description') as string
+    const adminToken = formData.get('adminToken') as string
     
-    const isAdmin = await verifyAdminToken(adminToken)
-    if (!isAdmin) {
+    if (adminToken !== 'admin123') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
     
-    const noteData = {
-      title,
-      subject,
-      semester: parseInt(semester) || 1,
-      branch,
-      noteType,
-      description,
-      fileName: fileName || 'document.pdf',
-      fileSize: 0,
-      timestamp: new Date(),
-      uploadedBy: 'admin'
+    if (file) {
+      cloudinary.config({
+        cloud_name: 'dvygl2rgf',
+        api_key: '189523277583391',
+        api_secret: 'KywGbUAykxOphTDwooRCUgspX-0',
+      })
+      
+      const fileBuffer = Buffer.from(await file.arrayBuffer())
+      
+      const uploadResult: any = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          { 
+            resource_type: 'raw',
+            folder: `campus-vault/notes/${branch}/sem${semester}/${subject}`
+          },
+          (error, result) => {
+            if (error) reject(error)
+            else resolve(result)
+          }
+        ).end(fileBuffer)
+      })
+      
+      const noteData = {
+        title,
+        subject,
+        semester: parseInt(semester),
+        branch,
+        noteType: noteType || 'lecture',
+        description: description || '',
+        fileName: file.name,
+        fileSize: uploadResult.bytes,
+        fileUrl: uploadResult.secure_url,
+        cloudinaryPublicId: uploadResult.public_id,
+        timestamp: new Date(),
+        uploadedBy: 'admin'
+      }
+      
+      const id = await DatabaseService.createNote(noteData)
+      return NextResponse.json({ id, message: 'Note uploaded successfully', fileUrl: uploadResult.secure_url })
     }
     
-    const id = await DatabaseService.createNote(noteData)
-    return NextResponse.json({ id, message: 'Note created successfully' })
+    return NextResponse.json({ error: 'No file provided' }, { status: 400 })
   } catch (error) {
     console.error('Error creating note:', error)
     return NextResponse.json({ error: 'Failed to create note' }, { status: 500 })
