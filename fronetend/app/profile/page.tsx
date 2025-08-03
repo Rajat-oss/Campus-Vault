@@ -103,9 +103,12 @@ export default function ProfilePage() {
               {formData.name?.charAt(0).toUpperCase() || 'U'}
             </div>
             <div>
-              <h3 className="text-lg font-semibold">{formData.name || 'User'}</h3>
+              <h3 className="text-xl font-bold">{formData.name || 'User'}</h3>
               <p className="text-sm text-muted-foreground">{profile?.email}</p>
               <p className="text-sm text-muted-foreground capitalize">{profile?.profession}</p>
+              {formData.name && (
+                <p className="text-xs text-green-600 mt-1">✓ Username from signup</p>
+              )}
             </div>
           </div>
 
