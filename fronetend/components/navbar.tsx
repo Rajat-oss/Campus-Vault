@@ -12,15 +12,23 @@ import { useUserProfile } from "@/hooks/use-user-profile"
 import { logout } from "@/lib/auth"
 import { useToast } from "@/hooks/use-toast"
 
-const navigation = [
-  { name: "Home", href: "/" },
-  { name: "Announcements", href: "/announcements" },
-  { name: "Timetable", href: "/timetable" },
-  { name: "Notes", href: "/notes" },
-  { name: "PYQs", href: "/pyqs" },
-  { name: "Upload", href: "/upload" },
-  { name: "Request", href: "/request" },
-]
+const getNavigation = (profession?: string) => {
+  const baseNav = [
+    { name: "Home", href: "/" },
+    { name: "Announcements", href: "/announcements" },
+    { name: "Timetable", href: "/timetable" },
+    { name: "Notes", href: "/notes" },
+    { name: "PYQs", href: "/pyqs" },
+    { name: "Upload", href: "/upload" },
+    { name: "Request", href: "/request" },
+  ]
+  
+  if (profession === 'student') {
+    baseNav.splice(5, 0, { name: "Thoughts", href: "/thoughts" })
+  }
+  
+  return baseNav
+}
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -58,7 +66,7 @@ export function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
-              {navigation.map((item) => (
+              {getNavigation(profile?.profession).map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
@@ -99,7 +107,7 @@ export function Navbar() {
         {isOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t">
-              {navigation.map((item) => (
+              {getNavigation(profile?.profession).map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
