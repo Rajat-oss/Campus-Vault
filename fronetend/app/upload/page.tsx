@@ -90,6 +90,8 @@ export default function UploadPage() {
     }
   }
 
+  const [uploading, setUploading] = useState(false)
+
   const handleNoteSubmit = async () => {
     if (!user) {
       toast({ title: "Error", description: "Please login to upload", variant: "destructive" })
@@ -101,93 +103,119 @@ export default function UploadPage() {
       return
     }
 
-    try {
-      let fileUrl = ''
-      if (noteForm.file) {
-        const fileRef = ref(storage, `notes/${Date.now()}_${noteForm.file.name}`)
-        await uploadBytes(fileRef, noteForm.file)
-        fileUrl = await getDownloadURL(fileRef)
-      }
+    if (!noteForm.file) {
+      toast({ title: "Error", description: "Please select a file", variant: "destructive" })
+      return
+    }
 
-      await addDoc(collection(db, 'notes'), {
-        title: noteForm.title,
-        subject: noteForm.subject,
-        semester: parseInt(noteForm.semester),
-        branch: noteForm.department,
-        noteType: "uploaded",
-        description: noteForm.description,
-        fileName: noteForm.file?.name || "",
-        fileUrl: fileUrl,
-        uploadedAt: Timestamp.now(),
-        uploadedBy: profile?.name || user?.email || 'Unknown',
-        uploaderProfession: profile?.profession || 'student',
-        college: profile?.college || ''
+    setUploading(true)
+    toast({ title: "Uploading...", description: "Please wait while we upload your file" })
+
+    try {
+      const formData = new FormData()
+      formData.append('file', noteForm.file)
+      formData.append('type', 'notes')
+      formData.append('title', noteForm.title)
+      formData.append('subject', noteForm.subject)
+      formData.append('semester', noteForm.semester)
+      formData.append('branch', noteForm.department)
+      formData.append('description', noteForm.description)
+      formData.append('adminToken', 'admin123')
+
+      const response = await fetch('http://localhost:3001/api/notes', {
+        method: 'POST',
+        body: formData
       })
-      
-      toast({ title: "Success", description: "Notes uploaded successfully" })
-      setNoteForm({ title: "", subject: "", semester: "", department: "", description: "", file: null })
-    } catch (error) {
+
+      const result = await response.json()
+
+      if (result.success || response.ok) {
+        toast({ title: "Success", description: "Notes uploaded successfully to Cloudinary" })
+        setNoteForm({ title: "", subject: "", semester: "", department: "", description: "", file: null })
+      } else {
+        throw new Error(result.error || 'Upload failed')
+      }
+    } catch (error: any) {
       console.error('Upload error:', error)
-      toast({ title: "Error", description: `Failed to upload: ${error.message}`, variant: "destructive" })
+      toast({ title: "Error", description: `Upload failed: ${error.message}`, variant: "destructive" })
+    } finally {
+      setUploading(false)
     }
   }
 
   const handlePyqSubmit = async () => {
-    try {
-      let fileUrl = ''
-      if (pyqForm.file) {
-        const fileRef = ref(storage, `pyqs/${Date.now()}_${pyqForm.file.name}`)
-        await uploadBytes(fileRef, pyqForm.file)
-        fileUrl = await getDownloadURL(fileRef)
-      }
+    if (!pyqForm.file) {
+      toast({ title: "Error", description: "Please select a file", variant: "destructive" })
+      return
+    }
 
-      await addDoc(collection(db, 'pyqs'), {
-        title: pyqForm.title,
-        subject: pyqForm.subject,
-        year: parseInt(pyqForm.year),
-        semester: parseInt(pyqForm.semester),
-        branch: pyqForm.department,
-        examType: pyqForm.examType,
-        fileName: pyqForm.file?.name || "",
-        fileUrl: fileUrl,
-        uploadedAt: Timestamp.now(),
-        uploadedBy: profile?.name || user?.email || 'Unknown',
-        uploaderProfession: profile?.profession || 'student',
-        college: profile?.college || ''
+    setUploading(true)
+    toast({ title: "Uploading...", description: "Please wait while we upload your PYQ" })
+
+    try {
+      const formData = new FormData()
+      formData.append('file', pyqForm.file)
+      formData.append('subject', pyqForm.subject)
+      formData.append('year', pyqForm.year)
+      formData.append('semester', pyqForm.semester)
+      formData.append('branch', pyqForm.department)
+      formData.append('examType', pyqForm.examType)
+      formData.append('adminToken', 'admin123')
+
+      const response = await fetch('http://localhost:3001/api/pyqs', {
+        method: 'POST',
+        body: formData
       })
-      
-      toast({ title: "Success", description: "PYQ uploaded successfully" })
-      setPyqForm({ title: "", subject: "", year: "", semester: "", department: "", examType: "", file: null })
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to upload PYQ", variant: "destructive" })
+
+      const result = await response.json()
+
+      if (result.success || response.ok) {
+        toast({ title: "Success", description: "PYQ uploaded successfully to Cloudinary" })
+        setPyqForm({ title: "", subject: "", year: "", semester: "", department: "", examType: "", file: null })
+      } else {
+        throw new Error(result.error || 'Upload failed')
+      }
+    } catch (error: any) {
+      toast({ title: "Error", description: `Upload failed: ${error.message}`, variant: "destructive" })
+    } finally {
+      setUploading(false)
     }
   }
 
   const handleTimetableSubmit = async () => {
-    try {
-      let fileUrl = ''
-      if (timetableForm.file) {
-        const fileRef = ref(storage, `timetables/${Date.now()}_${timetableForm.file.name}`)
-        await uploadBytes(fileRef, timetableForm.file)
-        fileUrl = await getDownloadURL(fileRef)
-      }
+    if (!timetableForm.file) {
+      toast({ title: "Error", description: "Please select a file", variant: "destructive" })
+      return
+    }
 
-      await addDoc(collection(db, 'timetables'), {
-        title: timetableForm.title,
-        branch: timetableForm.department,
-        semester: parseInt(timetableForm.semester),
-        fileName: timetableForm.file?.name || "",
-        fileUrl: fileUrl,
-        uploadedAt: Timestamp.now(),
-        uploadedBy: profile?.name || user?.email || 'Unknown',
-        uploaderProfession: profile?.profession || 'student',
-        college: profile?.college || ''
+    setUploading(true)
+    toast({ title: "Uploading...", description: "Please wait while we upload your timetable" })
+
+    try {
+      const formData = new FormData()
+      formData.append('file', timetableForm.file)
+      formData.append('title', timetableForm.title)
+      formData.append('branch', timetableForm.department)
+      formData.append('semester', timetableForm.semester)
+      formData.append('adminToken', 'admin123')
+
+      const response = await fetch('http://localhost:3001/api/timetables', {
+        method: 'POST',
+        body: formData
       })
-      
-      toast({ title: "Success", description: "Timetable uploaded successfully" })
-      setTimetableForm({ title: "", department: "", semester: "", file: null })
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to upload timetable", variant: "destructive" })
+
+      const result = await response.json()
+
+      if (result.success || response.ok) {
+        toast({ title: "Success", description: "Timetable uploaded successfully to Cloudinary" })
+        setTimetableForm({ title: "", department: "", semester: "", file: null })
+      } else {
+        throw new Error(result.error || 'Upload failed')
+      }
+    } catch (error: any) {
+      toast({ title: "Error", description: `Upload failed: ${error.message}`, variant: "destructive" })
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -339,9 +367,9 @@ export default function UploadPage() {
                   onChange={(e) => setNoteForm({ ...noteForm, file: e.target.files?.[0] || null })}
                 />
               </div>
-              <Button onClick={handleNoteSubmit} className="w-full">
+              <Button onClick={handleNoteSubmit} className="w-full" disabled={uploading}>
                 <Upload className="h-4 w-4 mr-2" />
-                Upload Notes
+                {uploading ? 'Uploading...' : 'Upload Notes'}
               </Button>
             </CardContent>
           </Card>
@@ -440,9 +468,9 @@ export default function UploadPage() {
                   onChange={(e) => setPyqForm({ ...pyqForm, file: e.target.files?.[0] || null })}
                 />
               </div>
-              <Button onClick={handlePyqSubmit} className="w-full">
+              <Button onClick={handlePyqSubmit} className="w-full" disabled={uploading}>
                 <Upload className="h-4 w-4 mr-2" />
-                Upload PYQ
+                {uploading ? 'Uploading...' : 'Upload PYQ'}
               </Button>
             </CardContent>
           </Card>
@@ -503,9 +531,9 @@ export default function UploadPage() {
                   onChange={(e) => setTimetableForm({ ...timetableForm, file: e.target.files?.[0] || null })}
                 />
               </div>
-              <Button onClick={handleTimetableSubmit} className="w-full">
+              <Button onClick={handleTimetableSubmit} className="w-full" disabled={uploading}>
                 <Upload className="h-4 w-4 mr-2" />
-                Upload Timetable
+                {uploading ? 'Uploading...' : 'Upload Timetable'}
               </Button>
             </CardContent>
           </Card>

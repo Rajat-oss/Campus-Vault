@@ -48,41 +48,31 @@ export function useNotes(filters?: { subject?: string; semester?: number; branch
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    let q = query(collection(db, 'notes'), orderBy('uploadedAt', 'desc'))
-
-    const unsubscribe = onSnapshot(q,
-      (snapshot) => {
-        let notes = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
+    const fetchNotes = async () => {
+      try {
+        const params = new URLSearchParams()
+        if (filters?.subject) params.append('subject', filters.subject)
+        if (filters?.semester) params.append('semester', filters.semester.toString())
+        if (filters?.branch) params.append('branch', filters.branch)
+        if (filters?.noteType) params.append('noteType', filters.noteType)
         
-        // Apply filters in memory
-        if (filters?.subject) {
-          notes = notes.filter(n => n.subject === filters.subject)
-        }
-        if (filters?.semester) {
-          notes = notes.filter(n => n.semester === filters.semester)
-        }
-        if (filters?.branch) {
-          notes = notes.filter(n => n.branch === filters.branch)
-        }
-        if (filters?.noteType) {
-          notes = notes.filter(n => n.noteType === filters.noteType)
-        }
+        const response = await fetch(`http://localhost:3001/api/notes?${params}`)
+        const notes = await response.json()
         
-        setData(notes)
+        setData(Array.isArray(notes) ? notes : [])
         setLoading(false)
         setError(null)
-      },
-      (err) => {
+      } catch (err) {
         setError('Failed to fetch notes')
         setLoading(false)
         console.error(err)
       }
-    )
+    }
 
-    return () => unsubscribe()
+    fetchNotes()
+    const interval = setInterval(fetchNotes, 5000) // Refresh every 5 seconds
+    
+    return () => clearInterval(interval)
   }, [filters?.subject, filters?.semester, filters?.branch, filters?.noteType])
 
   return { data, loading, error }
@@ -94,44 +84,32 @@ export function usePYQs(filters?: { subject?: string; year?: number; semester?: 
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    let q = query(collection(db, 'pyqs'), orderBy('uploadedAt', 'desc'))
-
-    const unsubscribe = onSnapshot(q,
-      (snapshot) => {
-        let pyqs = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
+    const fetchPYQs = async () => {
+      try {
+        const params = new URLSearchParams()
+        if (filters?.subject) params.append('subject', filters.subject)
+        if (filters?.year) params.append('year', filters.year.toString())
+        if (filters?.semester) params.append('semester', filters.semester.toString())
+        if (filters?.branch) params.append('branch', filters.branch)
+        if (filters?.examType) params.append('examType', filters.examType)
         
-        // Apply filters in memory
-        if (filters?.subject) {
-          pyqs = pyqs.filter(p => p.subject === filters.subject)
-        }
-        if (filters?.year) {
-          pyqs = pyqs.filter(p => p.year === filters.year)
-        }
-        if (filters?.semester) {
-          pyqs = pyqs.filter(p => p.semester === filters.semester)
-        }
-        if (filters?.branch) {
-          pyqs = pyqs.filter(p => p.branch === filters.branch)
-        }
-        if (filters?.examType) {
-          pyqs = pyqs.filter(p => p.examType === filters.examType)
-        }
+        const response = await fetch(`http://localhost:3001/api/pyqs?${params}`)
+        const result = await response.json()
         
-        setData(pyqs)
+        setData(result.pyqs || [])
         setLoading(false)
         setError(null)
-      },
-      (err) => {
+      } catch (err) {
         setError('Failed to fetch PYQs')
         setLoading(false)
         console.error(err)
       }
-    )
+    }
 
-    return () => unsubscribe()
+    fetchPYQs()
+    const interval = setInterval(fetchPYQs, 5000)
+    
+    return () => clearInterval(interval)
   }, [filters?.subject, filters?.year, filters?.semester, filters?.branch, filters?.examType])
 
   return { data, loading, error }
@@ -143,35 +121,29 @@ export function useTimetables(branch?: string, semester?: number) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    let q = query(collection(db, 'timetables'), orderBy('uploadedAt', 'desc'))
-
-    const unsubscribe = onSnapshot(q,
-      (snapshot) => {
-        let timetables = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
+    const fetchTimetables = async () => {
+      try {
+        const params = new URLSearchParams()
+        if (branch) params.append('branch', branch)
+        if (semester) params.append('semester', semester.toString())
         
-        // Apply filters in memory
-        if (branch) {
-          timetables = timetables.filter(t => t.branch === branch)
-        }
-        if (semester) {
-          timetables = timetables.filter(t => t.semester === semester)
-        }
+        const response = await fetch(`http://localhost:3001/api/timetables?${params}`)
+        const result = await response.json()
         
-        setData(timetables)
+        setData(result.timetables || [])
         setLoading(false)
         setError(null)
-      },
-      (err) => {
+      } catch (err) {
         setError('Failed to fetch timetables')
         setLoading(false)
         console.error(err)
       }
-    )
+    }
 
-    return () => unsubscribe()
+    fetchTimetables()
+    const interval = setInterval(fetchTimetables, 5000)
+    
+    return () => clearInterval(interval)
   }, [branch, semester])
 
   return { data, loading, error }

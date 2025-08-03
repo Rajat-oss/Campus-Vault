@@ -198,7 +198,7 @@ export default function NotesPage() {
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <div className="flex items-center">
-                    <span className="text-muted-foreground">{new Date(note.uploadedAt?.toDate()).toLocaleDateString()}</span>
+                    <span className="text-muted-foreground">{note.timestamp ? new Date(note.timestamp.seconds * 1000).toLocaleDateString() : 'Recently'}</span>
                   </div>
                 </div>
               </div>
