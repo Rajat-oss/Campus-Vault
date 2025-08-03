@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,8 +20,15 @@ const departments = ["CSE", "ECE", "Mechanical", "Civil", "IT", "Electrical"]
 const semesters = ["1", "2", "3", "4", "5", "6", "7", "8"]
 
 export default function UploadPage() {
-  const [activeTab, setActiveTab] = useState("announcement")
   const { profile, loading } = useUserProfile()
+  const [activeTab, setActiveTab] = useState("notes")
+
+  // Update active tab when profile loads
+  useEffect(() => {
+    if (profile?.profession === 'faculty' && activeTab === 'notes') {
+      setActiveTab('announcement')
+    }
+  }, [profile?.profession, activeTab])
   const { user } = useAuth()
   const { toast } = useToast()
 
@@ -120,7 +127,10 @@ export default function UploadPage() {
       formData.append('semester', noteForm.semester)
       formData.append('branch', noteForm.department)
       formData.append('description', noteForm.description)
-      formData.append('adminToken', 'admin123')
+      // Only add admin token for faculty
+      if (profile?.profession === 'faculty') {
+        formData.append('adminToken', 'admin123')
+      }
 
       const response = await fetch('http://localhost:3001/api/notes', {
         method: 'POST',
@@ -160,7 +170,10 @@ export default function UploadPage() {
       formData.append('semester', pyqForm.semester)
       formData.append('branch', pyqForm.department)
       formData.append('examType', pyqForm.examType)
-      formData.append('adminToken', 'admin123')
+      // Only add admin token for faculty
+      if (profile?.profession === 'faculty') {
+        formData.append('adminToken', 'admin123')
+      }
 
       const response = await fetch('http://localhost:3001/api/pyqs', {
         method: 'POST',
@@ -231,67 +244,81 @@ export default function UploadPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-4">Upload Content</h1>
-        <p className="text-muted-foreground text-lg">Share announcements, notes, PYQs, and timetables with the community</p>
+        <p className="text-muted-foreground text-lg">
+          {profile?.profession === 'faculty' 
+            ? 'Share announcements, notes, PYQs, and timetables with the community'
+            : 'Share notes and PYQs with the community'
+          }
+        </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="announcement">Announcement</TabsTrigger>
-          <TabsTrigger value="notes">Notes</TabsTrigger>
-          <TabsTrigger value="pyq">PYQ</TabsTrigger>
-          <TabsTrigger value="timetable">Timetable</TabsTrigger>
-        </TabsList>
+        {profile?.profession === 'faculty' ? (
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="announcement">Announcement</TabsTrigger>
+            <TabsTrigger value="notes">Notes</TabsTrigger>
+            <TabsTrigger value="pyq">PYQ</TabsTrigger>
+            <TabsTrigger value="timetable">Timetable</TabsTrigger>
+          </TabsList>
+        ) : (
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="notes">Notes</TabsTrigger>
+            <TabsTrigger value="pyq">PYQ</TabsTrigger>
+          </TabsList>
+        )}
 
-        <TabsContent value="announcement" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Plus className="h-5 w-5 mr-2" />
-                Create Announcement
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="ann-title">Title</Label>
-                <Input
-                  id="ann-title"
-                  value={announcementForm.title}
-                  onChange={(e) => setAnnouncementForm({ ...announcementForm, title: e.target.value })}
-                  placeholder="Announcement title"
-                />
-              </div>
-              <div>
-                <Label htmlFor="ann-type">Type</Label>
-                <Select value={announcementForm.type} onValueChange={(value) => setAnnouncementForm({ ...announcementForm, type: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="exam">Exam</SelectItem>
-                    <SelectItem value="event">Event</SelectItem>
-                    <SelectItem value="notice">Notice</SelectItem>
-                    <SelectItem value="holiday">Holiday</SelectItem>
-                    <SelectItem value="placement">Placement</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="ann-content">Content</Label>
-                <Textarea
-                  id="ann-content"
-                  value={announcementForm.content}
-                  onChange={(e) => setAnnouncementForm({ ...announcementForm, content: e.target.value })}
-                  placeholder="Announcement content"
-                  rows={4}
-                />
-              </div>
-              <Button onClick={handleAnnouncementSubmit} className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                Post Announcement
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {profile?.profession === 'faculty' && (
+          <TabsContent value="announcement" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Plus className="h-5 w-5 mr-2" />
+                  Create Announcement
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="ann-title">Title</Label>
+                  <Input
+                    id="ann-title"
+                    value={announcementForm.title}
+                    onChange={(e) => setAnnouncementForm({ ...announcementForm, title: e.target.value })}
+                    placeholder="Announcement title"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="ann-type">Type</Label>
+                  <Select value={announcementForm.type} onValueChange={(value) => setAnnouncementForm({ ...announcementForm, type: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="exam">Exam</SelectItem>
+                      <SelectItem value="event">Event</SelectItem>
+                      <SelectItem value="notice">Notice</SelectItem>
+                      <SelectItem value="holiday">Holiday</SelectItem>
+                      <SelectItem value="placement">Placement</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="ann-content">Content</Label>
+                  <Textarea
+                    id="ann-content"
+                    value={announcementForm.content}
+                    onChange={(e) => setAnnouncementForm({ ...announcementForm, content: e.target.value })}
+                    placeholder="Announcement content"
+                    rows={4}
+                  />
+                </div>
+                <Button onClick={handleAnnouncementSubmit} className="w-full">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Post Announcement
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         <TabsContent value="notes" className="mt-6">
           <Card>
@@ -476,68 +503,70 @@ export default function UploadPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="timetable" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Calendar className="h-5 w-5 mr-2" />
-                Upload Timetable
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="tt-title">Title</Label>
-                <Input
-                  id="tt-title"
-                  value={timetableForm.title}
-                  onChange={(e) => setTimetableForm({ ...timetableForm, title: e.target.value })}
-                  placeholder="Timetable title"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+        {profile?.profession === 'faculty' && (
+          <TabsContent value="timetable" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Calendar className="h-5 w-5 mr-2" />
+                  Upload Timetable
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="tt-department">Department</Label>
-                  <Select value={timetableForm.department} onValueChange={(value) => setTimetableForm({ ...timetableForm, department: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {departments.map((dept) => (
-                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="tt-title">Title</Label>
+                  <Input
+                    id="tt-title"
+                    value={timetableForm.title}
+                    onChange={(e) => setTimetableForm({ ...timetableForm, title: e.target.value })}
+                    placeholder="Timetable title"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="tt-department">Department</Label>
+                    <Select value={timetableForm.department} onValueChange={(value) => setTimetableForm({ ...timetableForm, department: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select department" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departments.map((dept) => (
+                          <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="tt-semester">Semester</Label>
+                    <Select value={timetableForm.semester} onValueChange={(value) => setTimetableForm({ ...timetableForm, semester: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select semester" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {semesters.map((sem) => (
+                          <SelectItem key={sem} value={sem}>{sem}th Semester</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="tt-semester">Semester</Label>
-                  <Select value={timetableForm.semester} onValueChange={(value) => setTimetableForm({ ...timetableForm, semester: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select semester" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {semesters.map((sem) => (
-                        <SelectItem key={sem} value={sem}>{sem}th Semester</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="tt-file">Upload File</Label>
+                  <Input
+                    id="tt-file"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => setTimetableForm({ ...timetableForm, file: e.target.files?.[0] || null })}
+                  />
                 </div>
-              </div>
-              <div>
-                <Label htmlFor="tt-file">Upload File</Label>
-                <Input
-                  id="tt-file"
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={(e) => setTimetableForm({ ...timetableForm, file: e.target.files?.[0] || null })}
-                />
-              </div>
-              <Button onClick={handleTimetableSubmit} className="w-full" disabled={uploading}>
-                <Upload className="h-4 w-4 mr-2" />
-                {uploading ? 'Uploading...' : 'Upload Timetable'}
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                <Button onClick={handleTimetableSubmit} className="w-full" disabled={uploading}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  {uploading ? 'Uploading...' : 'Upload Timetable'}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   )
