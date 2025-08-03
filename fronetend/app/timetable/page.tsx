@@ -82,6 +82,8 @@ export default function TimetablePage() {
     }
   }
 
+  const [loading, setLoading] = useState(false)
+
   const handleDownload = () => {
     setLoading(true)
     // Simulate download delay
@@ -145,7 +147,7 @@ export default function TimetablePage() {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      Uploaded: {new Date(currentTimetable.uploadedAt?.toDate()).toLocaleDateString()}
+                      Uploaded: {new Date(currentTimetable.uploadedAt || currentTimetable.uploadDate).toLocaleDateString()}
                     </div>
                     <Badge variant="secondary">{currentTimetable.fileName || 'PDF'}</Badge>
                     <span>By: {currentTimetable.uploadedBy}</span>
