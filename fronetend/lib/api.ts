@@ -42,6 +42,12 @@ class ApiService {
     })
   }
 
+  async deleteAnnouncement(id: string, adminToken: string) {
+    return this.request(`/announcements?id=${id}&adminToken=${adminToken}`, {
+      method: 'DELETE',
+    })
+  }
+
   // Notes
   async getNotes(filters?: { subject?: string; semester?: number; branch?: string; noteType?: string }) {
     const params = new URLSearchParams()
@@ -60,6 +66,12 @@ class ApiService {
     }).then(res => res.json())
   }
 
+  async deleteNote(id: string, adminToken: string) {
+    return this.request(`/notes?id=${id}&adminToken=${adminToken}`, {
+      method: 'DELETE',
+    })
+  }
+
   // PYQs
   async getPYQs(filters?: { subject?: string; year?: number; semester?: number; branch?: string; examType?: string }) {
     const params = new URLSearchParams()
@@ -72,6 +84,12 @@ class ApiService {
     return this.request(`/pyqs?${params.toString()}`)
   }
 
+  async deletePYQ(id: string, adminToken: string) {
+    return this.request(`/pyqs?id=${id}&adminToken=${adminToken}`, {
+      method: 'DELETE',
+    })
+  }
+
   // Timetables
   async getTimetables(branch?: string, semester?: number) {
     const params = new URLSearchParams()
@@ -79,6 +97,12 @@ class ApiService {
     if (semester) params.append('semester', semester.toString())
     
     return this.request(`/timetables?${params.toString()}`)
+  }
+
+  async deleteTimetable(id: string, adminToken: string) {
+    return this.request(`/timetables?id=${id}&adminToken=${adminToken}`, {
+      method: 'DELETE',
+    })
   }
 
   // Admin

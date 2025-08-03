@@ -58,3 +58,30 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to create announcement' }, { status: 500 })
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    const adminToken = searchParams.get('adminToken')
+    
+    if (adminToken !== 'admin123') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+    
+    if (!id) {
+      return NextResponse.json({ error: 'Announcement ID is required' }, { status: 400 })
+    }
+    
+    const index = announcements.findIndex(a => a.id === id)
+    if (index === -1) {
+      return NextResponse.json({ error: 'Announcement not found' }, { status: 404 })
+    }
+    
+    announcements.splice(index, 1)
+    return NextResponse.json({ message: 'Announcement deleted successfully' })
+  } catch (error) {
+    console.error('Error deleting announcement:', error)
+    return NextResponse.json({ error: 'Failed to delete announcement' }, { status: 500 })
+  }
+}

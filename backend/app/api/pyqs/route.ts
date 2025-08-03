@@ -91,3 +91,39 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to upload PYQ' }, { status: 500 })
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    const adminToken = searchParams.get('adminToken')
+    
+    if (adminToken !== 'admin123') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+    
+    if (!id) {
+      return NextResponse.json({ error: 'PYQ ID is required' }, { status: 400 })
+    }
+    
+    const index = pyqs.findIndex(p => p.id === id)
+    if (index === -1) {
+      return NextResponse.json({ error: 'PYQ not found' }, { status: 404 })
+    }
+    
+    const pyq = pyqs[index]
+    
+    // Delete from Cloudinary
+    if (pyq.cloudinaryPublicId) {
+      await CloudinaryService.deleteFile(pyq.cloudinaryPublicId)
+    }
+    
+    // Remove from in-memory storage
+    pyqs.splice(index, 1)
+    
+    return NextResponse.json({ message: 'PYQ deleted successfully' })
+  } catch (error) {
+    console.error('Error deleting PYQ:', error)
+    return NextResponse.json({ error: 'Failed to delete PYQ' }, { status: 500 })
+  }
+}

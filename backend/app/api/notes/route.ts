@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { DatabaseService } from '@/lib/firebase/database-service'
 import { verifyAdminToken } from '@/lib/firebase/auth-utils'
 import { v2 as cloudinary } from 'cloudinary'
+import { COLLECTIONS } from '@/lib/firebase/collections'
 
 export async function GET(request: NextRequest) {
   try {
@@ -87,5 +88,50 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating note:', error)
     return NextResponse.json({ error: 'Failed to create note' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    const adminToken = searchParams.get('adminToken')
+    
+    if (adminToken !== 'admin123') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+    
+    if (!id) {
+      return NextResponse.json({ error: 'Note ID is required' }, { status: 400 })
+    }
+    
+    // Get note details to delete from Cloudinary
+    const notes = await DatabaseService.getNotes()
+    const note = notes.find(n => n.id === id)
+    
+    if (!note) {
+      return NextResponse.json({ error: 'Note not found' }, { status: 404 })
+    }
+    
+    // Delete from Cloudinary if cloudinaryPublicId exists
+    if (note.cloudinaryPublicId) {
+      cloudinary.config({
+        cloud_name: 'dvygl2rgf',
+        api_key: '189523277583391',
+        api_secret: 'KywGbUAykxOphTDwooRCUgspX-0',
+      })
+      
+      await cloudinary.uploader.destroy(note.cloudinaryPublicId, {
+        resource_type: 'raw'
+      })
+    }
+    
+    // Delete from database
+    await DatabaseService.deleteDocument(COLLECTIONS.NOTES, id)
+    
+    return NextResponse.json({ message: 'Note deleted successfully' })
+  } catch (error) {
+    console.error('Error deleting note:', error)
+    return NextResponse.json({ error: 'Failed to delete note' }, { status: 500 })
   }
 }

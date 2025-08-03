@@ -82,3 +82,39 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to upload timetable' }, { status: 500 })
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    const adminToken = searchParams.get('adminToken')
+    
+    if (adminToken !== 'admin123') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+    
+    if (!id) {
+      return NextResponse.json({ error: 'Timetable ID is required' }, { status: 400 })
+    }
+    
+    const index = timetables.findIndex(t => t.id === id)
+    if (index === -1) {
+      return NextResponse.json({ error: 'Timetable not found' }, { status: 404 })
+    }
+    
+    const timetable = timetables[index]
+    
+    // Delete from Cloudinary
+    if (timetable.cloudinaryPublicId) {
+      await CloudinaryService.deleteFile(timetable.cloudinaryPublicId)
+    }
+    
+    // Remove from in-memory storage
+    timetables.splice(index, 1)
+    
+    return NextResponse.json({ message: 'Timetable deleted successfully' })
+  } catch (error) {
+    console.error('Error deleting timetable:', error)
+    return NextResponse.json({ error: 'Failed to delete timetable' }, { status: 500 })
+  }
+}

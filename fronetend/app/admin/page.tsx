@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { useUserProfile } from "@/hooks/use-user-profile"
 import { collection, addDoc, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { apiService } from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,19 +29,18 @@ const semesters = [
   "8th Semester",
 ]
 
-// Empty data for existing content
-const existingContent = {
-  announcements: [],
-  notes: [],
-  pyqs: [],
-  timetables: [],
-}
-
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("announcements")
   const { profile, loading } = useUserProfile()
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
+  const [existingContent, setExistingContent] = useState({
+    announcements: [],
+    notes: [],
+    pyqs: [],
+    timetables: [],
+  })
+  const [isDeleting, setIsDeleting] = useState<string | null>(null)
 
   // Form states
   const [announcementForm, setAnnouncementForm] = useState({
@@ -75,6 +75,69 @@ export default function AdminPage() {
   })
 
   const { toast } = useToast()
+
+  // Fetch existing content
+  useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        const [announcements, notes, pyqs, timetables] = await Promise.all([
+          apiService.getAnnouncements(),
+          apiService.getNotes(),
+          apiService.getPYQs(),
+          apiService.getTimetables(),
+        ])
+        
+        setExistingContent({
+          announcements: announcements.announcements || [],
+          notes: notes || [],
+          pyqs: pyqs.pyqs || [],
+          timetables: timetables.timetables || [],
+        })
+      } catch (error) {
+        console.error('Error fetching content:', error)
+      }
+    }
+    
+    if (profile?.profession === 'faculty') {
+      fetchContent()
+    }
+  }, [profile])
+
+  const handleDelete = async (type: string, id: string) => {
+    if (!confirm('Are you sure you want to delete this item?')) return
+    
+    setIsDeleting(id)
+    try {
+      const adminToken = 'admin123' // In production, get from auth
+      
+      switch (type) {
+        case 'announcements':
+          await apiService.deleteAnnouncement(id, adminToken)
+          break
+        case 'notes':
+          await apiService.deleteNote(id, adminToken)
+          break
+        case 'pyqs':
+          await apiService.deletePYQ(id, adminToken)
+          break
+        case 'timetables':
+          await apiService.deleteTimetable(id, adminToken)
+          break
+      }
+      
+      // Update local state
+      setExistingContent(prev => ({
+        ...prev,
+        [type]: prev[type].filter(item => item.id !== id)
+      }))
+      
+      toast({ title: "Success", description: "Item deleted successfully" })
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete item", variant: "destructive" })
+    } finally {
+      setIsDeleting(null)
+    }
+  }
 
   if (loading) {
     return (
@@ -111,8 +174,6 @@ export default function AdminPage() {
       })
     }, 200)
   }
-
-
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -233,15 +294,22 @@ export default function AdminPage() {
                           <div className="font-medium">{item.title}</div>
                           <div className="text-sm text-muted-foreground flex items-center gap-2">
                             <Badge variant="outline">{item.type}</Badge>
-                            <span>{item.date}</span>
-                            <Badge variant={item.status === "Published" ? "default" : "secondary"}>{item.status}</Badge>
+                            <span>{new Date(item.timestamp).toLocaleDateString()}</span>
+                            <Badge variant={item.isActive ? "default" : "secondary"}>
+                              {item.isActive ? "Active" : "Inactive"}
+                            </Badge>
                           </div>
                         </div>
                         <div className="flex gap-2">
                           <Button size="sm" variant="outline">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            disabled={isDeleting === item.id}
+                            onClick={() => handleDelete('announcements', item.id)}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -381,9 +449,6 @@ export default function AdminPage() {
                     try {
                       await handleFileUpload(noteForm.file, 'notes')
                       
-                      // For demo purposes, just show success
-                      // In production, you would upload the file and save metadata
-                      
                       toast({ title: "Success", description: "Notes uploaded successfully" })
                       setNoteForm({ title: "", subject: "", semester: "", branch: "", type: "", description: "", file: null })
                     } catch (error) {
@@ -410,8 +475,10 @@ export default function AdminPage() {
                           <div className="font-medium">{item.title}</div>
                           <div className="text-sm text-muted-foreground flex items-center gap-2">
                             <Badge variant="outline">{item.subject}</Badge>
-                            <span>{item.semester}</span>
-                            <Badge variant={item.type === "Handwritten" ? "default" : "secondary"}>{item.type}</Badge>
+                            <span>Sem {item.semester}</span>
+                            <Badge variant={item.noteType === "handwritten" ? "default" : "secondary"}>
+                              {item.noteType}
+                            </Badge>
                           </div>
                         </div>
                         <div className="flex gap-2">
@@ -421,7 +488,12 @@ export default function AdminPage() {
                           <Button size="sm" variant="outline">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            disabled={isDeleting === item.id}
+                            onClick={() => handleDelete('notes', item.id)}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -560,10 +632,10 @@ export default function AdminPage() {
                     existingContent.pyqs.map((item) => (
                       <div key={item.id} className="flex items-center justify-between p-3 border rounded">
                         <div>
-                          <div className="font-medium">{item.title}</div>
+                          <div className="font-medium">{item.subject} - {item.year}</div>
                           <div className="text-sm text-muted-foreground flex items-center gap-2">
-                            <Badge variant="outline">{item.subject}</Badge>
-                            <span>{item.year}</span>
+                            <Badge variant="outline">{item.branch}</Badge>
+                            <span>Sem {item.semester}</span>
                             <Badge variant="secondary">{item.examType}</Badge>
                           </div>
                         </div>
@@ -574,7 +646,12 @@ export default function AdminPage() {
                           <Button size="sm" variant="outline">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            disabled={isDeleting === item.id}
+                            onClick={() => handleDelete('pyqs', item.id)}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -678,8 +755,8 @@ export default function AdminPage() {
                           <div className="font-medium">{item.title}</div>
                           <div className="text-sm text-muted-foreground flex items-center gap-2">
                             <Badge variant="outline">{item.branch}</Badge>
-                            <span>{item.semester}</span>
-                            <Badge variant={item.status === "Published" ? "default" : "secondary"}>{item.status}</Badge>
+                            <span>Sem {item.semester}</span>
+                            <Badge variant="default">Active</Badge>
                           </div>
                         </div>
                         <div className="flex gap-2">
@@ -689,7 +766,12 @@ export default function AdminPage() {
                           <Button size="sm" variant="outline">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            disabled={isDeleting === item.id}
+                            onClick={() => handleDelete('timetables', item.id)}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
