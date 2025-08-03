@@ -210,9 +210,9 @@ export default function PYQsPage() {
               <CardContent>
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Format:</span>
+                    <span className="text-muted-foreground">File:</span>
                     <span className="font-medium">
-                      PDF • {pyq.fileSize || 'N/A'}
+                      {pyq.fileName || 'PDF'}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -220,8 +220,12 @@ export default function PYQsPage() {
                     <span className="font-medium">{pyq.downloads || 0}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Uploaded:</span>
-                    <span className="font-medium">{new Date(pyq.uploadedAt).toLocaleDateString()}</span>
+                    <span className="text-muted-foreground">Uploaded by:</span>
+                    <span className="font-medium">{pyq.uploadedBy}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Date:</span>
+                    <span className="font-medium">{new Date(pyq.uploadedAt?.toDate()).toLocaleDateString()}</span>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -229,7 +233,13 @@ export default function PYQsPage() {
                     <Eye className="h-4 w-4 mr-2" />
                     Preview
                   </Button>
-                  <Button size="sm" variant="outline" className="flex-1 bg-transparent">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex-1 bg-transparent"
+                    onClick={() => pyq.fileUrl && window.open(pyq.fileUrl, '_blank')}
+                    disabled={!pyq.fileUrl}
+                  >
                     <Download className="h-4 w-4 mr-2" />
                     Download
                   </Button>

@@ -1,38 +1,45 @@
+"use client"
+
 import { Card, CardContent } from "@/components/ui/card"
 import { Bell, BookOpen, FileText, Clock } from "lucide-react"
+import { usePlatformStats } from "@/hooks/use-platform-stats"
 
-const stats = [
-  {
-    title: "Total Announcements",
-    value: "156",
-    icon: Bell,
-    description: "Active announcements",
-    color: "text-blue-600",
-  },
-  {
-    title: "Notes Uploaded",
-    value: "2,847",
-    icon: BookOpen,
-    description: "Study materials available",
-    color: "text-green-600",
-  },
-  {
-    title: "PYQs Available",
-    value: "1,234",
-    icon: FileText,
-    description: "Previous year papers",
-    color: "text-purple-600",
-  },
-  {
-    title: "Active Timetables",
-    value: "24",
-    icon: Clock,
-    description: "Current semester schedules",
-    color: "text-orange-600",
-  },
-]
+
 
 export function StatsSection() {
+  const { totalUsers, totalResources, totalAnnouncements, loading } = usePlatformStats()
+
+  const stats = [
+    {
+      title: "Total Announcements",
+      value: loading ? "..." : totalAnnouncements.toString(),
+      icon: Bell,
+      description: "Active announcements",
+      color: "text-blue-600",
+    },
+    {
+      title: "Resources Shared",
+      value: loading ? "..." : totalResources.toString(),
+      icon: BookOpen,
+      description: "Notes & PYQs available",
+      color: "text-green-600",
+    },
+    {
+      title: "Registered Users",
+      value: loading ? "..." : totalUsers.toString(),
+      icon: FileText,
+      description: "Active community members",
+      color: "text-purple-600",
+    },
+    {
+      title: "Live Updates",
+      value: "24/7",
+      icon: Clock,
+      description: "Real-time synchronization",
+      color: "text-orange-600",
+    },
+  ]
+
   return (
     <section className="py-16 bg-muted/30">
       <div className="container mx-auto px-4">

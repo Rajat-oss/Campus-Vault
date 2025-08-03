@@ -79,13 +79,11 @@ export function Navbar() {
             <div className="hidden md:flex items-center gap-2">
               <div className="text-sm text-muted-foreground">
                 <div>{profile?.name || user?.email}</div>
-                <div className="text-xs">{profile?.profession} {profile?.department && `• ${profile.department}`}</div>
+                <div className="text-xs">
+                  {profile?.profession} {profile?.department && `• ${profile.department}`}
+                  {profile?.profession === 'faculty' && profile?.employeeId && ` • ID: ${profile.employeeId}`}
+                </div>
               </div>
-              {profile?.profession === 'faculty' && (
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/admin">Faculty Panel</Link>
-                </Button>
-              )}
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4" />
               </Button>
@@ -123,11 +121,11 @@ export function Navbar() {
               <div className="space-y-1 pt-2 border-t">
                 <div className="px-3 py-2 text-sm text-muted-foreground">
                   <div>{profile?.name || user?.email}</div>
-                  <div className="text-xs">{profile?.profession} {profile?.department && `• ${profile.department}`}</div>
+                  <div className="text-xs">
+                    {profile?.profession} {profile?.department && `• ${profile.department}`}
+                    {profile?.profession === 'faculty' && profile?.employeeId && ` • ID: ${profile.employeeId}`}
+                  </div>
                 </div>
-                {profile?.profession === 'faculty' && (
-                  <Link href="/admin" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-accent" onClick={() => setIsOpen(false)}>Faculty Panel</Link>
-                )}
                 <button onClick={() => { handleLogout(); setIsOpen(false) }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-accent">Logout</button>
               </div>
             </div>
