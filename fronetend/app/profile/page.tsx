@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { User, Save, Loader2 } from "lucide-react"
+import { User, Save, Loader2, Copy } from "lucide-react"
 import { useUserProfile } from "@/hooks/use-user-profile"
 import { useAuth } from "@/hooks/use-auth"
 import { useToast } from "@/hooks/use-toast"
@@ -48,7 +48,6 @@ export default function ProfilePage() {
 
     setSaving(true)
     try {
-      // Find user document
       const q = query(collection(db, 'users'), where('uid', '==', user.uid))
       const snapshot = await getDocs(q)
       
@@ -68,6 +67,13 @@ export default function ProfilePage() {
       toast({ title: "Error", description: "Failed to update profile", variant: "destructive" })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const copyCollegeId = () => {
+    if (profile?.collegeId) {
+      navigator.clipboard.writeText(profile.collegeId)
+      toast({ title: "Copied", description: "College ID copied to clipboard" })
     }
   }
 
@@ -196,6 +202,33 @@ export default function ProfilePage() {
               />
             </div>
           </div>
+
+          {/* Faculty College ID */}
+          {profile?.profession === 'faculty' && (
+            <div className="border-t pt-6">
+              <h4 className="font-semibold mb-4">College Environment</h4>
+              <div className="space-y-2">
+                <Label htmlFor="collegeId">Your Unique College ID</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="collegeId"
+                    value={profile?.collegeId || ""}
+                    disabled
+                    className="bg-muted font-mono text-sm"
+                  />
+                  <Button
+                    onClick={copyCollegeId}
+                    variant="outline"
+                    size="icon"
+                    title="Copy College ID"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Share this ID with students so they can join your college environment</p>
+              </div>
+            </div>
+          )}
 
           {/* Account Info */}
           <div className="border-t pt-6">

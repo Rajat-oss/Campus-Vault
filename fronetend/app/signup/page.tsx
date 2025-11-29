@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { signUp } from "@/lib/auth"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
+import { collection, query, where, getDocs } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
 export default function SignupPage() {
   const [email, setEmail] = useState("")
@@ -21,13 +23,36 @@ export default function SignupPage() {
 
   const [employeeId, setEmployeeId] = useState("")
   const [college, setCollege] = useState("")
+  const [collegeName, setCollegeName] = useState("")
+  const [collegeId, setCollegeId] = useState("")
   const [loading, setLoading] = useState(false)
+  const [colleges, setColleges] = useState<Array<{name: string, id: string}>>([])
 
-  const colleges = [
-    "School of Engineering and Technology, Vikram University"
-  ]
   const router = useRouter()
   const { toast } = useToast()
+
+  const fetchColleges = async () => {
+    if (profession === 'student') {
+      try {
+        const q = query(collection(db, 'users'), where('profession', '==', 'faculty'))
+        const snapshot = await getDocs(q)
+        const collegeMap = new Map()
+        snapshot.docs.forEach(doc => {
+          const collegeId = doc.data().collegeId
+          if (collegeId && !collegeMap.has(collegeId)) {
+            collegeMap.set(collegeId, { name: doc.data().college, id: collegeId })
+          }
+        })
+        setColleges(Array.from(collegeMap.values()))
+      } catch (error) {
+        console.error('Error fetching colleges:', error)
+      }
+    }
+  }
+
+  useEffect(() => {
+    fetchColleges()
+  }, [profession])
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,20 +66,17 @@ export default function SignupPage() {
       return
     }
 
-
-
     setLoading(true)
 
     try {
       await signUp(email, password, {
         name,
         profession: profession as 'student' | 'faculty',
-        college,
+        college: profession === 'faculty' ? collegeName : college,
         employeeId: profession === 'faculty' ? employeeId : undefined
       })
       
       toast({ title: "Success", description: "Account created successfully" })
-      // Small delay to ensure auth state updates
       setTimeout(() => {
         router.push("/")
       }, 100)
@@ -144,26 +166,49 @@ export default function SignupPage() {
               />
             </div>
             
-            <div>
-              <Label htmlFor="college">College</Label>
-              <Select value={college} onValueChange={setCollege}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your college" />
-                </SelectTrigger>
-                <SelectContent>
-                  {colleges.map((collegeName) => (
-                    <SelectItem key={collegeName} value={collegeName}>
-                      {collegeName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
+            {profession === 'faculty' && (
+              <div>
+                <Label htmlFor="collegeName">College Name</Label>
+                <Input
+                  id="collegeName"
+                  value={collegeName}
+                  onChange={(e) => setCollegeName(e.target.value)}
+                  placeholder="Enter your college name"
+                  required
+                />
+              </div>
+            )}
 
-            
+            {profession === 'student' && (
+              <>
+                <div>
+                  <Label htmlFor="collegeId">College ID</Label>
+                  <Input
+                    id="collegeId"
+                    value={collegeId}
+                    onChange={(e) => setCollegeId(e.target.value)}
+                    placeholder="Enter college ID provided by faculty"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="college">College</Label>
+                  <Select value={college} onValueChange={setCollege}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your college" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {colleges.map((col, index) => (
+                        <SelectItem key={`${col.id}-${index}`} value={col.name}>
+                          {col.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
 
-            
             {profession === 'faculty' && (
               <div>
                 <Label htmlFor="employeeId">Employee ID</Label>

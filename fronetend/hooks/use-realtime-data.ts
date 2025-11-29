@@ -1,14 +1,24 @@
 import { useState, useEffect } from 'react'
 import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import { useUserProfile } from './use-user-profile'
 
 export function useAnnouncements(filters?: { type?: string; isActive?: boolean }) {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { profile } = useUserProfile()
 
   useEffect(() => {
-    let q = query(collection(db, 'announcements'), orderBy('timestamp', 'desc'))
+    if (!profile?.college) {
+      setLoading(false)
+      return
+    }
+
+    let q = query(
+      collection(db, 'announcements'),
+      where('college', '==', profile.college)
+    )
 
     const unsubscribe = onSnapshot(q, 
       (snapshot) => {
@@ -17,7 +27,6 @@ export function useAnnouncements(filters?: { type?: string; isActive?: boolean }
           ...doc.data()
         }))
         
-        // Apply filters in memory
         if (filters?.type) {
           announcements = announcements.filter(a => a.type === filters.type)
         }
@@ -37,7 +46,7 @@ export function useAnnouncements(filters?: { type?: string; isActive?: boolean }
     )
 
     return () => unsubscribe()
-  }, [filters?.type, filters?.isActive])
+  }, [profile?.college, filters?.type, filters?.isActive])
 
   return { data, loading, error }
 }
@@ -46,11 +55,18 @@ export function useNotes(filters?: { subject?: string; semester?: number; branch
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { profile } = useUserProfile()
 
   useEffect(() => {
     const fetchNotes = async () => {
       try {
+        if (!profile?.college) {
+          setLoading(false)
+          return
+        }
+
         const params = new URLSearchParams()
+        params.append('college', profile.college)
         if (filters?.subject) params.append('subject', filters.subject)
         if (filters?.semester) params.append('semester', filters.semester.toString())
         if (filters?.branch) params.append('branch', filters.branch)
@@ -70,10 +86,10 @@ export function useNotes(filters?: { subject?: string; semester?: number; branch
     }
 
     fetchNotes()
-    const interval = setInterval(fetchNotes, 5000) // Refresh every 5 seconds
+    const interval = setInterval(fetchNotes, 5000)
     
     return () => clearInterval(interval)
-  }, [filters?.subject, filters?.semester, filters?.branch, filters?.noteType])
+  }, [profile?.college, filters?.subject, filters?.semester, filters?.branch, filters?.noteType])
 
   return { data, loading, error }
 }
@@ -82,11 +98,18 @@ export function usePYQs(filters?: { subject?: string; year?: number; semester?: 
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { profile } = useUserProfile()
 
   useEffect(() => {
     const fetchPYQs = async () => {
       try {
+        if (!profile?.college) {
+          setLoading(false)
+          return
+        }
+
         const params = new URLSearchParams()
+        params.append('college', profile.college)
         if (filters?.subject) params.append('subject', filters.subject)
         if (filters?.year) params.append('year', filters.year.toString())
         if (filters?.semester) params.append('semester', filters.semester.toString())
@@ -110,7 +133,7 @@ export function usePYQs(filters?: { subject?: string; year?: number; semester?: 
     const interval = setInterval(fetchPYQs, 5000)
     
     return () => clearInterval(interval)
-  }, [filters?.subject, filters?.year, filters?.semester, filters?.branch, filters?.examType])
+  }, [profile?.college, filters?.subject, filters?.year, filters?.semester, filters?.branch, filters?.examType])
 
   return { data, loading, error }
 }
@@ -119,11 +142,18 @@ export function useTimetables(branch?: string, semester?: number) {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { profile } = useUserProfile()
 
   useEffect(() => {
     const fetchTimetables = async () => {
       try {
+        if (!profile?.college) {
+          setLoading(false)
+          return
+        }
+
         const params = new URLSearchParams()
+        params.append('college', profile.college)
         if (branch) params.append('branch', branch)
         if (semester) params.append('semester', semester.toString())
         
@@ -144,7 +174,7 @@ export function useTimetables(branch?: string, semester?: number) {
     const interval = setInterval(fetchTimetables, 5000)
     
     return () => clearInterval(interval)
-  }, [branch, semester])
+  }, [profile?.college, branch, semester])
 
   return { data, loading, error }
 }

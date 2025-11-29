@@ -16,16 +16,18 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter()
 
   const isAuthPage = pathname === '/login' || pathname === '/signup'
+  const isLandingPage = pathname === '/landing'
+  const isPublicPage = isAuthPage || isLandingPage
 
   useEffect(() => {
     if (!loading) {
-      if (!user && !isAuthPage) {
-        router.push('/login')
-      } else if (user && isAuthPage) {
+      if (!user && !isPublicPage) {
+        router.push('/landing')
+      } else if (user && (isAuthPage || isLandingPage)) {
         router.push('/')
       }
     }
-  }, [user, loading, isAuthPage, router])
+  }, [user, loading, isPublicPage, isAuthPage, isLandingPage, router])
 
   if (loading) {
     return (
@@ -35,7 +37,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     )
   }
 
-  if (!user && !isAuthPage) {
+  if (!user && !isPublicPage) {
     return null
   }
 
