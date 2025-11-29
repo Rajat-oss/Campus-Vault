@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore'
+import { collection, query, onSnapshot, where, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useUserProfile } from './use-user-profile'
 
@@ -65,17 +65,16 @@ export function useNotes(filters?: { subject?: string; semester?: number; branch
           return
         }
 
-        const params = new URLSearchParams()
-        params.append('college', profile.college)
-        if (filters?.subject) params.append('subject', filters.subject)
-        if (filters?.semester) params.append('semester', filters.semester.toString())
-        if (filters?.branch) params.append('branch', filters.branch)
-        if (filters?.noteType) params.append('noteType', filters.noteType)
+        let q = query(collection(db, 'notes'), where('college', '==', profile.college))
+        const snapshot = await getDocs(q)
+        let notes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
         
-        const response = await fetch(`http://localhost:3001/api/notes?${params}`)
-        const notes = await response.json()
+        if (filters?.subject) notes = notes.filter(n => n.subject === filters.subject)
+        if (filters?.semester) notes = notes.filter(n => n.semester === filters.semester)
+        if (filters?.branch) notes = notes.filter(n => n.branch === filters.branch)
+        if (filters?.noteType) notes = notes.filter(n => n.noteType === filters.noteType)
         
-        setData(Array.isArray(notes) ? notes : [])
+        setData(notes)
         setLoading(false)
         setError(null)
       } catch (err) {
@@ -108,18 +107,17 @@ export function usePYQs(filters?: { subject?: string; year?: number; semester?: 
           return
         }
 
-        const params = new URLSearchParams()
-        params.append('college', profile.college)
-        if (filters?.subject) params.append('subject', filters.subject)
-        if (filters?.year) params.append('year', filters.year.toString())
-        if (filters?.semester) params.append('semester', filters.semester.toString())
-        if (filters?.branch) params.append('branch', filters.branch)
-        if (filters?.examType) params.append('examType', filters.examType)
+        let q = query(collection(db, 'pyqs'), where('college', '==', profile.college))
+        const snapshot = await getDocs(q)
+        let pyqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
         
-        const response = await fetch(`http://localhost:3001/api/pyqs?${params}`)
-        const result = await response.json()
+        if (filters?.subject) pyqs = pyqs.filter(p => p.subject === filters.subject)
+        if (filters?.year) pyqs = pyqs.filter(p => p.year === filters.year)
+        if (filters?.semester) pyqs = pyqs.filter(p => p.semester === filters.semester)
+        if (filters?.branch) pyqs = pyqs.filter(p => p.branch === filters.branch)
+        if (filters?.examType) pyqs = pyqs.filter(p => p.examType === filters.examType)
         
-        setData(result.pyqs || [])
+        setData(pyqs)
         setLoading(false)
         setError(null)
       } catch (err) {
@@ -152,15 +150,14 @@ export function useTimetables(branch?: string, semester?: number) {
           return
         }
 
-        const params = new URLSearchParams()
-        params.append('college', profile.college)
-        if (branch) params.append('branch', branch)
-        if (semester) params.append('semester', semester.toString())
+        let q = query(collection(db, 'timetables'), where('college', '==', profile.college))
+        const snapshot = await getDocs(q)
+        let timetables = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
         
-        const response = await fetch(`http://localhost:3001/api/timetables?${params}`)
-        const result = await response.json()
+        if (branch) timetables = timetables.filter(t => t.branch === branch)
+        if (semester) timetables = timetables.filter(t => t.semester === semester)
         
-        setData(result.timetables || [])
+        setData(timetables)
         setLoading(false)
         setError(null)
       } catch (err) {
