@@ -77,13 +77,7 @@ export default function SignupPage() {
       })
       
       toast({ title: "Success", description: "Account created successfully" })
-<<<<<<< HEAD:app/signup/page.tsx
       router.push("/home")
-=======
-      setTimeout(() => {
-        router.push("/")
-      }, 100)
->>>>>>> 84c115bb5ceb770fb0454cc4d573aeb68e531020:fronetend/app/signup/page.tsx
     } catch (error: any) {
       toast({ 
         title: "Signup failed", 

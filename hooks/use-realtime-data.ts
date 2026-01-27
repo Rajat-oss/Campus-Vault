@@ -68,16 +68,11 @@ export function useNotes(filters?: { subject?: string; semester?: number; branch
         let q = query(collection(db, 'notes'), where('college', '==', profile.college))
         const snapshot = await getDocs(q)
         let notes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-        
-<<<<<<< HEAD:hooks/use-realtime-data.ts
-        const response = await fetch(`/api/notes?${params}`)
-        const notes = await response.json()
-=======
+
         if (filters?.subject) notes = notes.filter(n => n.subject === filters.subject)
         if (filters?.semester) notes = notes.filter(n => n.semester === filters.semester)
         if (filters?.branch) notes = notes.filter(n => n.branch === filters.branch)
         if (filters?.noteType) notes = notes.filter(n => n.noteType === filters.noteType)
->>>>>>> 84c115bb5ceb770fb0454cc4d573aeb68e531020:fronetend/hooks/use-realtime-data.ts
         
         setData(notes)
         setLoading(false)
@@ -115,17 +110,12 @@ export function usePYQs(filters?: { subject?: string; year?: number; semester?: 
         let q = query(collection(db, 'pyqs'), where('college', '==', profile.college))
         const snapshot = await getDocs(q)
         let pyqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-        
-<<<<<<< HEAD:hooks/use-realtime-data.ts
-        const response = await fetch(`/api/pyqs?${params}`)
-        const result = await response.json()
-=======
+
         if (filters?.subject) pyqs = pyqs.filter(p => p.subject === filters.subject)
         if (filters?.year) pyqs = pyqs.filter(p => p.year === filters.year)
         if (filters?.semester) pyqs = pyqs.filter(p => p.semester === filters.semester)
         if (filters?.branch) pyqs = pyqs.filter(p => p.branch === filters.branch)
         if (filters?.examType) pyqs = pyqs.filter(p => p.examType === filters.examType)
->>>>>>> 84c115bb5ceb770fb0454cc4d573aeb68e531020:fronetend/hooks/use-realtime-data.ts
         
         setData(pyqs)
         setLoading(false)
@@ -163,14 +153,9 @@ export function useTimetables(branch?: string, semester?: number) {
         let q = query(collection(db, 'timetables'), where('college', '==', profile.college))
         const snapshot = await getDocs(q)
         let timetables = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-        
-<<<<<<< HEAD:hooks/use-realtime-data.ts
-        const response = await fetch(`/api/timetables?${params}`)
-        const result = await response.json()
-=======
+
         if (branch) timetables = timetables.filter(t => t.branch === branch)
         if (semester) timetables = timetables.filter(t => t.semester === semester)
->>>>>>> 84c115bb5ceb770fb0454cc4d573aeb68e531020:fronetend/hooks/use-realtime-data.ts
         
         setData(timetables)
         setLoading(false)
