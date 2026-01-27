@@ -33,9 +33,6 @@ export default function AnnouncementsPage() {
   const { toast } = useToast()
 
   const handleDelete = async (id: string, createdBy: string) => {
-    console.log('Profile:', profile)
-    console.log('CreatedBy:', createdBy)
-    
     const canDelete = profile?.name === createdBy || 
                      profile?.email === createdBy || 
                      profile?.profession === 'faculty'
@@ -53,7 +50,13 @@ export default function AnnouncementsPage() {
     }
   }
 
-  const filteredAnnouncements = announcements.filter((announcement: any) => {
+  const sortedAnnouncements = [...announcements].sort((a: any, b: any) => {
+    const timeA = a.timestamp?.toDate?.() || new Date(0)
+    const timeB = b.timestamp?.toDate?.() || new Date(0)
+    return timeB.getTime() - timeA.getTime()
+  })
+
+  const filteredAnnouncements = sortedAnnouncements.filter((announcement: any) => {
     const matchesSearch =
       announcement.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       announcement.content.toLowerCase().includes(searchTerm.toLowerCase())

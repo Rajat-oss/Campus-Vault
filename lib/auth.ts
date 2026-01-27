@@ -16,6 +16,11 @@ interface UserData {
   college: string
   department: string
   employeeId?: string
+  collegeId?: string
+}
+
+const generateCollegeId = (): string => {
+  return 'COLLEGE_' + Math.random().toString(36).substr(2, 9).toUpperCase()
 }
 
 export const signIn = async (email: string, password: string) => {
@@ -24,6 +29,8 @@ export const signIn = async (email: string, password: string) => {
 
 export const signUp = async (email: string, password: string, userData?: Partial<UserData>) => {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+  
+  const collegeId = userData?.profession === 'faculty' ? generateCollegeId() : undefined
   
   // Save user profile to Firestore
   await addDoc(collection(db, 'users'), {
@@ -34,6 +41,7 @@ export const signUp = async (email: string, password: string, userData?: Partial
     college: userData?.college || '',
     department: userData?.department || '',
     employeeId: userData?.employeeId,
+    collegeId: collegeId,
     createdAt: new Date()
   })
   

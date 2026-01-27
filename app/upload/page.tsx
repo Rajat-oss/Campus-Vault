@@ -86,7 +86,8 @@ export default function UploadPage() {
         createdBy: profile?.name || user?.email || 'Unknown',
         department: profile?.department || '',
         profession: profile?.profession || 'student',
-        college: profile?.college || ''
+        college: profile?.college || '',
+        collegeId: profile?.collegeId || ''
       })
       
       toast({ title: "Success", description: "Announcement uploaded successfully" })
@@ -127,7 +128,8 @@ export default function UploadPage() {
       formData.append('semester', noteForm.semester)
       formData.append('branch', noteForm.department)
       formData.append('description', noteForm.description)
-      // Only add admin token for faculty
+      formData.append('college', profile?.college || '')
+      formData.append('collegeId', profile?.collegeId || '')
       if (profile?.profession === 'faculty') {
         formData.append('adminToken', 'admin123')
       }
@@ -170,7 +172,8 @@ export default function UploadPage() {
       formData.append('semester', pyqForm.semester)
       formData.append('branch', pyqForm.department)
       formData.append('examType', pyqForm.examType)
-      // Only add admin token for faculty
+      formData.append('college', profile?.college || '')
+      formData.append('collegeId', profile?.collegeId || '')
       if (profile?.profession === 'faculty') {
         formData.append('adminToken', 'admin123')
       }
@@ -210,6 +213,8 @@ export default function UploadPage() {
       formData.append('title', timetableForm.title)
       formData.append('branch', timetableForm.department)
       formData.append('semester', timetableForm.semester)
+      formData.append('college', profile?.college || '')
+      formData.append('collegeId', profile?.collegeId || '')
       formData.append('adminToken', 'admin123')
 
       const response = await fetch('http://localhost:3001/api/timetables', {
