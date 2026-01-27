@@ -1,6 +1,5 @@
 {
   "buildCommand": "npm run build",
-<<<<<<< HEAD:vercel.json
   "outputDirectory": ".next",
   "framework": "nextjs",
   "installCommand": "npm install",
@@ -16,7 +15,3 @@
     }
   ]
 }
-=======
-  "outputDirectory": ".next"
-}
->>>>>>> 84c115bb5ceb770fb0454cc4d573aeb68e531020:fronetend/vercel.json
