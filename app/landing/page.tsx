@@ -192,18 +192,18 @@ export default function LandingPage() {
 
         {/* CTA Section */}
         <section className="py-24">
-          <Card className="border-0 bg-gradient-to-r from-grey-600 to-grey-600 text-white">
+          <Card className="border border-gray-700 bg-gray-900/80 backdrop-blur-sm text-white">
             <CardHeader className="text-center pb-8">
               <CardTitle className="text-4xl md:text-5xl font-bold mb-6">Ready to Excel?</CardTitle>
-              <CardDescription className="text-blue-100 text-xl max-w-2xl mx-auto">
+              <CardDescription className="text-gray-300 text-xl max-w-2xl mx-auto">
                 Join thousands of students who have transformed their academic journey with CampusVault
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
-              <Button asChild size="lg" variant="secondary" className="text-lg px-8 py-4 rounded-lg mb-6 bg-white text-blue-600 hover:bg-gray-100">
+              <Button asChild size="lg" className="text-lg px-8 py-4 rounded-lg mb-6 bg-blue-600 hover:bg-blue-700 text-white">
                 <Link href="/signup">Start Free Today</Link>
               </Button>
-              <p className="text-blue-100">
+              <p className="text-gray-300">
                 Already have an account?{" "}
                 <Link href="/login" className="text-white hover:underline font-medium">
                   Sign in here
