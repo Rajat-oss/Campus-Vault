@@ -1,14 +1,14 @@
 # College Management System
 
-A full-stack Next.js application with real-time features for managing college announcements, notes, PYQs, and timetables.
+A full-stack Next.js application with real-time features for managing college announcements, notes, PYQs, and timetables. **Ready for Vercel deployment!**
 
 ## Architecture
 
-- **Frontend**: Next.js 15 (Port 3000)
-- **Backend**: Next.js API Routes (Port 3001)
+- **Framework**: Next.js 15 (Full-stack)
 - **Database**: Firebase Firestore
 - **Storage**: Firebase Storage
 - **Authentication**: Firebase Auth (ready for integration)
+- **Deployment**: Vercel-optimized
 
 ## Features
 
@@ -18,33 +18,38 @@ A full-stack Next.js application with real-time features for managing college an
 - ✅ Timetable management
 - ✅ Admin panel with file uploads
 - ✅ Responsive design
+- ✅ Vercel deployment ready
 - 🔄 Firebase Auth integration (ready)
 
-## Quick Start
+## Quick Start (Development)
 
 1. **Install dependencies**:
    ```bash
-   cd backend && npm install
-   cd ../fronetend && npm install
+   npm install
    ```
 
 2. **Configure Firebase**:
-   - Update `.env.local` files in both frontend and backend
+   - Copy `.env.example` to `.env.local`
    - Add your Firebase configuration
 
-3. **Start development servers**:
+3. **Start development server**:
    ```bash
-   # Option 1: Use the batch script (Windows)
-   start-dev.bat
-   
-   # Option 2: Manual start
-   cd backend && npm run dev
-   cd fronetend && npm run dev
+   npm run dev
    ```
 
 4. **Access the application**:
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:3001
+   - Application: http://localhost:3000
+   - API endpoints: http://localhost:3000/api/*
+
+## Deployment to Vercel
+
+**Ready for one-click deployment!** See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions.
+
+### Quick Deploy:
+```bash
+npm i -g vercel
+vercel
+```
 
 ## API Endpoints
 
@@ -64,37 +69,54 @@ The app uses custom hooks for real-time data fetching:
 - `usePYQs()` - Real-time PYQs
 - `useTimetables()` - Real-time timetables
 
-## Firebase Integration
+## Environment Variables
 
-When you're ready to add Firebase:
-
-1. Create a Firebase project
-2. Enable Firestore, Storage, and Authentication
-3. Update environment variables
-4. The database service and auth utilities are already configured
+Required environment variables (see `.env.example`):
+- Firebase configuration
+- Firebase Admin credentials
+- Cloudinary configuration (optional)
+- Admin password
 
 ## Admin Access
 
 - Default admin password: `admin123`
-- Admin panel: http://localhost:3000/admin
+- Admin panel: `/admin`
 
 ## Project Structure
 
 ```
-├── backend/                 # Backend API server
-│   ├── app/api/            # API routes
-│   └── lib/firebase/       # Firebase services
-├── fronetend/              # Frontend application
-│   ├── app/                # Next.js app router
-│   ├── components/         # React components
-│   ├── hooks/              # Custom hooks
-│   └── lib/                # Utilities
-└── start-dev.bat           # Development server starter
+├── app/                    # Next.js app router
+│   ├── api/               # API routes (serverless functions)
+│   ├── admin/             # Admin pages
+│   ├── announcements/     # Announcements pages
+│   └── ...                # Other pages
+├── components/            # React components
+│   ├── ui/               # UI components
+│   └── ...               # Feature components
+├── hooks/                 # Custom React hooks
+├── lib/                   # Utilities and services
+│   ├── firebase/         # Firebase services
+│   └── cloudinary/       # Cloudinary services
+├── public/               # Static assets
+├── .env.example          # Environment variables template
+├── DEPLOYMENT.md         # Deployment guide
+└── vercel.json           # Vercel configuration
 ```
+
+## Tech Stack
+
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: Tailwind CSS, Radix UI
+- **Backend**: Next.js API Routes
+- **Database**: Firebase Firestore
+- **Storage**: Firebase Storage, Cloudinary
+- **Deployment**: Vercel
+- **Real-time**: Custom hooks with Firebase listeners
 
 ## Next Steps
 
-1. Configure Firebase with your project credentials
-2. Set up Firebase Authentication
-3. Deploy to your preferred platform
-4. Add more features as needed
+1. **Deploy to Vercel**: Follow [DEPLOYMENT.md](./DEPLOYMENT.md)
+2. **Configure Firebase**: Set up your Firebase project
+3. **Set up Authentication**: Enable Firebase Auth
+4. **Customize**: Add your branding and features
+5. **Scale**: Add more features as needed
